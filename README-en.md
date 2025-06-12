@@ -27,9 +27,6 @@ vue-fastapi-admin is a modern front-end and back-end separation development plat
 #### Login Page
 ![Login Page](https://github.com/mizhexiaoxiao/vue-fastapi-admin/blob/main/deploy/sample-picture/login.jpg)
 
-#### Workbench
-![Workbench](https://github.com/mizhexiaoxiao/vue-fastapi-admin/blob/main/deploy/sample-picture/workbench.jpg)
-
 #### User Management
 ![User Management](https://github.com/mizhexiaoxiao/vue-fastapi-admin/blob/main/deploy/sample-picture/user.jpg)
 
@@ -211,7 +208,6 @@ pnpm dev
             ├── login      // Login page
             ├── profile    // Profile page
             ├── system     // System management page
-            └── workbench  // Workbench page
 ```
 
 ### Visitors Count

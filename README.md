@@ -25,10 +25,6 @@
 ### 登录页
 
 ![image](https://gitee.com/mizhexiaoxiao/vue-fastapi-admin/raw/main/deploy/sample-picture/login.jpg)
-### 工作台
-
-![image](https://gitee.com/mizhexiaoxiao/vue-fastapi-admin/raw/main/deploy/sample-picture/workbench.jpg)
-
 ### 用户管理
 
 ![image](https://gitee.com/mizhexiaoxiao/vue-fastapi-admin/raw/main/deploy/sample-picture/user.jpg)
@@ -216,7 +212,6 @@ pnpm dev
             ├── login      // 登录页面
             ├── profile    // 个人资料页面
             ├── system     // 系统管理页面
-            └── workbench  // 工作台页面
 ```
 
 ### 进群交流

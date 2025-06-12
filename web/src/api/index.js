@@ -1,6 +1,8 @@
 import { request } from '@/utils'
+import orderApi from './order'
 
 export default {
+  ...orderApi,
   login: (data) => request.post('/base/access_token', data, { noNeedToken: true }),
   getUserInfo: () => request.get('/base/userinfo'),
   getUserMenu: () => request.get('/base/usermenu'),

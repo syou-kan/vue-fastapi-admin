@@ -15,16 +15,6 @@
       "message_verifying": "Verifying...",
       "message_login_success": "Login successful"
     },
-    "workbench": {
-      "label_workbench": "Workbench",
-      "text_hello": "hello, {username}",
-      "text_welcome": "Today is another day full of energy!",
-      "label_number_of_items": "Number of items",
-      "label_upcoming": "Upcoming",
-      "label_information": "Information",
-      "label_project": "Project",
-      "label_more": "More"
-    },
     "profile": {
       "label_profile": "Profile",
       "label_modify_information": "Modify your information",
@@ -49,14 +39,41 @@
     "errors": {
       "label_error": "Error",
       "text_back_to_home": "Back to home"
+    },
+    "order": {
+      "label_order": "Order Management",
+      "order_number": "Order No.",
+      "tracking_number": "Tracking No.",
+      "item_name": "Item Name",
+      "username": "Username",
+      "placeholder": {
+        "order_number": "Please enter order number",
+        "tracking_number": "Please enter tracking number",
+        "item_name": "Please enter item name",
+        "order_number_required": "Order number cannot be empty",
+        "tracking_number_required": "Tracking number cannot be empty",
+        "item_name_required": "Item name cannot be empty",
+        "username": "Please enter username",
+        "username_required": "Username cannot be empty"
+      },
+      "itemsReceived": "Items Received"
     }
   },
   "common": {
     "text": {
-      "update_success": "Update success"
+      "update_success": "Update success",
+      "yes": "Yes",
+      "no": "No"
     },
     "buttons": {
       "update": "Update"
-    }
+    },
+    "create": "Create",
+    "edit": "Edit",
+    "delete": "Delete",
+    "action": "Action",
+    "created_at": "Created At",
+    "updated_at": "Updated At",
+    "id": "ID"
   }
 }
