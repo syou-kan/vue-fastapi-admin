@@ -1,0 +1,6 @@
+2025-06-12 10:29:16,957 - INFO - __main__ - Logging to file: ./logs/conport.log
+2025-06-12 10:29:16,957 - INFO - __main__ - Starting ConPort in STDIO mode using FastMCP for initial CLI arg workspace_id: /home/gyoutu/wine/project/python/vue-fastapi-admin
+2025-06-12 10:29:16,958 - ERROR - __main__ - Unexpected error processing effective_workspace_id '/home/gyoutu/wine/project/python/vue-fastapi-admin' in STDIO mode setup: Template alembic.ini not found at /home/gyoutu/wine/project/mcp/context-portal/src/context_portal_mcp/templates/alembic/alembic.ini. Cannot auto-provision. Checked path: /home/gyoutu/wine/project/python/vue-fastapi-admin/alembic.ini, Exists: False
+2025-06-12 11:31:54,405 - INFO - __main__ - Logging to file: ./logs/conport.log
+2025-06-12 11:31:54,409 - INFO - __main__ - Starting ConPort in STDIO mode using FastMCP for initial CLI arg workspace_id: /home/gyoutu/wine/project/python/vue-fastapi-admin
+2025-06-12 11:31:54,409 - ERROR - __main__ - Unexpected error processing effective_workspace_id '/home/gyoutu/wine/project/python/vue-fastapi-admin' in STDIO mode setup: Template alembic.ini not found at /home/gyoutu/wine/project/mcp/context-portal/src/context_portal_mcp/templates/alembic/alembic.ini. Cannot auto-provision. Checked path: /home/gyoutu/wine/project/python/vue-fastapi-admin/alembic.ini, Exists: False

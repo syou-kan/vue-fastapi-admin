@@ -74,6 +74,8 @@ async def init_superuser():
                 password="123456",
                 is_active=True,
                 is_superuser=True,
+                dept_id=None, # 添加缺少的 dept_id
+                role_ids=[] # UserCreate 可能也需要 role_ids
             )
         )
 
@@ -162,18 +164,6 @@ async def init_menus():
             ),
         ]
         await Menu.bulk_create(children_menu)
-        await Menu.create(
-            menu_type=MenuType.MENU,
-            name="一级菜单",
-            path="/top-menu",
-            order=2,
-            parent_id=0,
-            icon="material-symbols:featured-play-list-outline",
-            is_hidden=False,
-            component="/top-menu",
-            keepalive=False,
-            redirect="",
-        )
 
 
 async def init_apis():
@@ -221,8 +211,30 @@ async def init_roles():
         await user_role.menus.add(*all_menus)
 
         # 为普通用户分配基本API
-        basic_apis = await Api.filter(Q(method__in=["GET"]) | Q(tags="基础模块"))
-        await user_role.apis.add(*basic_apis)
+        basic_apis_query = Q(method__in=["GET"]) | Q(tags="基础模块")
+        basic_apis_list = await Api.filter(basic_apis_query) # 直接 await QuerySet
+
+        # 明确添加获取订单列表的API权限给普通用户
+        # 路径确认:
+        # app.api.v1.api_router (prefix="/api") -> v1_router (prefix="/v1") -> orders_router (prefix="/orders")
+        # 完整路径应为 /api/v1/orders/
+        order_list_api_path = "/api/v1/orders/" # 确保路径末尾有斜杠，与 PermissionControl 中 request.url.path 匹配
+        order_list_api_method = "GET"
+        order_list_api = await Api.filter(method=order_list_api_method, path=order_list_api_path).first()
+
+        # 将 QuerySet 转换为 list 进行操作
+        mutable_basic_apis_list = list(basic_apis_list)
+
+        if order_list_api:
+            # 检查是否已存在于列表中，避免重复添加
+            exists = any(api.id == order_list_api.id for api in mutable_basic_apis_list)
+            if not exists:
+                mutable_basic_apis_list.append(order_list_api)
+                logger.info(f"权限初始化：已将API '{order_list_api_method} {order_list_api_path}' 添加到 '普通用户' 角色。")
+        else:
+            logger.warning(f"权限初始化：未找到API '{order_list_api_method} {order_list_api_path}'，无法添加到 '普通用户' 角色。请确保该API已通过 refresh_api 正确注册。")
+        
+        await user_role.apis.add(*mutable_basic_apis_list)
 
 
 async def init_data():

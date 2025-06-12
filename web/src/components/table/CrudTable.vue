@@ -19,10 +19,11 @@
 </template>
 
 <script setup>
+import { ref, onMounted } from 'vue'
 const props = defineProps({
   /**
    * @remote true: 后端分页  false： 前端分页
-   */
+   */ 
   remote: {
     type: Boolean,
     default: true,
@@ -102,13 +103,21 @@ async function handleQuery() {
     if (props.isPagination && props.remote) {
       paginationParams = { page: pagination.page, page_size: pagination.page_size }
     }
-    const { data, total } = await props.getData({
+    
+    const response = await props.getData({
       ...props.queryItems,
       ...props.extraParams,
       ...paginationParams,
     })
-    tableData.value = data
-    pagination.itemCount = total || 0
+    
+    // 处理分页数据
+    if (Array.isArray(response.data)) {
+      tableData.value = [...response.data]
+      pagination.itemCount = response.total || 0
+    } else {
+      tableData.value = []
+      pagination.itemCount = 0
+    }
   } catch (error) {
     tableData.value = []
     pagination.itemCount = 0
@@ -143,9 +152,15 @@ function onChecked(rowKeys) {
   }
 }
 
+// 初始化时自动加载数据
+onMounted(() => {
+  handleQuery()
+})
+
 defineExpose({
   handleSearch,
   handleReset,
   tableData,
+  refresh: handleQuery, // 暴露刷新方法
 })
 </script>

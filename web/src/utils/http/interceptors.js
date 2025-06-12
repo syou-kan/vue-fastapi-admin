@@ -22,13 +22,24 @@ export function reqReject(error) {
 
 export function resResolve(response) {
   const { data, status, statusText } = response
-  if (data?.code !== 200) {
+  
+  // 先检查是否是分页数据格式
+  if (data?.data && ('total' in data)) {
+    return Promise.resolve({
+      data: data.data,
+      total: data.total
+    })
+  }
+  
+  // 再检查是否有错误状态
+  if (data?.code && data.code !== 200) {
     const code = data?.code ?? status
-    /** 根据code处理对应的操作，并返回处理后的message */
     const message = resolveResError(code, data?.msg ?? statusText)
     window.$message?.error(message, { keepAliveOnHover: true })
     return Promise.reject({ code, message, error: data || response })
   }
+  
+  // 非分页接口直接返回数据
   return Promise.resolve(data)
 }
 

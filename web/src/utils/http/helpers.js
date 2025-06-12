@@ -6,26 +6,30 @@ export function addBaseParams(params) {
   }
 }
 
-export function resolveResError(code, message) {
+export function resolveResError(code, originalMessage) {
+  // 如果业务 code 表明不是绝对成功 (例如，不等于 200)
+  // 并且原始消息是 "ok" 或 "success" (忽略大小写) 等可能引起误解的简单肯定词，
+  // 则替换为一个更通用的错误提示。
+  // TODO: 未来可以考虑将 '操作未按预期完成' 进行国际化处理
+  if (code !== 200 && (originalMessage?.toLowerCase() === 'ok' || originalMessage?.toLowerCase() === 'success')) {
+    return `操作未按预期完成 (状态码: ${code})`;
+  }
+
+  // 如果不是上述特殊情况，则按原逻辑处理
   switch (code) {
     case 400:
-      message = message ?? '请求参数错误'
-      break
+      return originalMessage ?? '请求参数错误';
     case 401:
-      message = message ?? '登录已过期'
-      break
+      return originalMessage ?? '登录已过期';
     case 403:
-      message = message ?? '没有权限'
-      break
+      return originalMessage ?? '没有权限';
     case 404:
-      message = message ?? '资源或接口不存在'
-      break
+      return originalMessage ?? '资源或接口不存在';
     case 500:
-      message = message ?? '服务器异常'
-      break
+      return originalMessage ?? '服务器异常';
     default:
-      message = message ?? `【${code}】: 未知异常!`
-      break
+      // 如果 originalMessage 存在，则使用它，否则使用包含 code 的通用未知异常消息。
+      // TODO: 未来可以考虑将 '发生未知错误' 进行国际化处理
+      return originalMessage ?? `发生未知错误 (状态码: ${code})`;
   }
-  return message
 }
