@@ -5,7 +5,7 @@ from fastapi import HTTPException
 from tortoise.exceptions import DoesNotExist, IntegrityError
 
 from app.models.orders import Order
-from app.schemas.orders import OrderCreate, OrderUpdate
+from app.schemas.orders import OrderCreate, OrderUpdate, OrderQuerySchema
 from app.models.admin import User # Added import
 
 logger = logging.getLogger(__name__) # 获取 logger 实例
@@ -50,93 +50,51 @@ async def get_order(order_id: int) -> Optional[Order]:
     except DoesNotExist:
         raise HTTPException(status_code=404, detail="Order not found")
 
-
-async def get_orders(
-    current_user: User, # Moved and fixed
-    skip: int = 0,
-    limit: int = 100,
-    order_no: Optional[str] = None,
-    item_name: Optional[str] = None,
-    item_quantity: Optional[int] = None,
-    shipping_fee: Optional[float] = None,
-    remarks: Optional[str] = None,
-) -> List[Order]:
-    log_params = (
-        f"user: {current_user.username if current_user else 'None'}, skip: {skip}, limit: {limit}, "
-        f"order_no: {order_no}, item_name: {item_name}, item_quantity: {item_quantity}, "
-        f"shipping_fee: {shipping_fee}, remarks: {remarks}"
-    )
-    logger.info(f"接收到订单查询请求 - {log_params}")
-    
-    query = Order.all()
+def _apply_order_filters(
+    query,
+    current_user: User,
+    params: OrderQuerySchema
+):
     filters = []
-
-    if current_user and not current_user.is_superuser: # Added permission check
+    if current_user and not current_user.is_superuser:
         query = query.filter(username=current_user.username)
         filters.append(f"username={current_user.username}")
-    
-    if order_no:
-        query = query.filter(order_no__icontains=order_no)
-        filters.append(f"order_no__icontains={order_no}")
-    if item_name:
-        query = query.filter(item_name__icontains=item_name)
-        filters.append(f"item_name__icontains={item_name}")
-    if item_quantity is not None:
-        query = query.filter(item_quantity=item_quantity)
-        filters.append(f"item_quantity={item_quantity}")
-    if shipping_fee is not None:
-        query = query.filter(shipping_fee=shipping_fee)
-        filters.append(f"shipping_fee={shipping_fee}")
-    if remarks:
-        query = query.filter(remarks__icontains=remarks)
-        filters.append(f"remarks__icontains={remarks}")
-        
+
+    if params.items_received_status in ["0", "1"]:
+        query = query.filter(items_received=int(params.items_received_status))
+        filters.append(f"items_received={params.items_received_status}")
+
+    # You can add other filters from params here if needed in the future
+    # For example:
+    # if params.order_no:
+    #     query = query.filter(order_no__icontains=params.order_no)
+    #     filters.append(f"order_no__icontains={params.order_no}")
+
     logger.info(f"构建的查询条件: {', '.join(filters) if filters else '无过滤条件'}")
+    return query
+
+async def get_orders(
+    current_user: User,
+    params: OrderQuerySchema,
+) -> List[Order]:
+    logger.info(f"接收到订单查询请求 - user: {current_user.username}, params: {params.model_dump()}")
     
-    results = await query.offset(skip).limit(limit)
+    query = Order.all()
+    query = _apply_order_filters(query, current_user, params)
+    
+    results = await query.offset((params.page - 1) * params.page_size).limit(params.page_size)
     logger.info(f"查询返回结果数量: {len(results)}")
     
     return results
 
 async def get_orders_count(
-    current_user: User, # Added
-    order_no: Optional[str] = None,
-    item_name: Optional[str] = None,
-    item_quantity: Optional[int] = None,
-    shipping_fee: Optional[float] = None,
-    remarks: Optional[str] = None,
+    current_user: User,
+    params: OrderQuerySchema,
 ) -> int:
-    log_params = (
-        f"user: {current_user.username if current_user else 'None'}, order_no: {order_no}, "
-        f"item_name: {item_name}, item_quantity: {item_quantity}, "
-        f"shipping_fee: {shipping_fee}, remarks: {remarks}"
-    )
-    logger.info(f"获取订单总数 - {log_params}")
+    logger.info(f"获取订单总数 - user: {current_user.username}, params: {params.model_dump()}")
     
     query = Order.all()
-    filters = []
-
-    if current_user and not current_user.is_superuser: # Added permission check
-        query = query.filter(username=current_user.username)
-        filters.append(f"username={current_user.username}")
-    
-    if order_no:
-        query = query.filter(order_no__icontains=order_no)
-        filters.append(f"order_no__icontains={order_no}")
-    if item_name:
-        query = query.filter(item_name__icontains=item_name)
-        filters.append(f"item_name__icontains={item_name}")
-    if item_quantity is not None:
-        query = query.filter(item_quantity=item_quantity)
-        filters.append(f"item_quantity={item_quantity}")
-    if shipping_fee is not None:
-        query = query.filter(shipping_fee=shipping_fee)
-        filters.append(f"shipping_fee={shipping_fee}")
-    if remarks:
-        query = query.filter(remarks__icontains=remarks)
-        filters.append(f"remarks__icontains={remarks}")
-        
-    logger.info(f"总数查询条件: {', '.join(filters) if filters else '无过滤条件'}")
+    query = _apply_order_filters(query, current_user, params)
     
     count = await query.count()
     logger.info(f"订单总数: {count}")

@@ -2,7 +2,7 @@ from typing import List, Optional, Annotated
 
 from fastapi import APIRouter, Depends, HTTPException
 
-from app.schemas.orders import Order, OrderCreate, OrderUpdate, OrderList
+from app.schemas.orders import Order, OrderCreate, OrderUpdate, OrderList, OrderQuerySchema
 from app.controllers import order as crud_order
 from app.models.admin import User # Added import
 from app.core.dependency import DependAuth # Added import
@@ -28,38 +28,24 @@ async def create_order_endpoint(
 
 @router.get("/", response_model=OrderList, summary="查看订单", tags=["orders"])
 async def get_orders_endpoint(
-    current_user: Annotated[User, DependAuth], # Modified
-    skip: int = 0,
-    limit: int = 10,
-    order_no: Optional[str] = None,
-    item_name: Optional[str] = None,
-    item_quantity: Optional[int] = None,
-    shipping_fee: Optional[float] = None,
-    remarks: Optional[str] = None,
+    current_user: Annotated[User, DependAuth],
+    params: OrderQuerySchema = Depends(),
 ):
     """
     Retrieve a list of orders. Supports pagination and filtering.
-    - **skip**: Number of records to skip (for pagination)
-    - **limit**: Maximum number of records to return
-    - **order_no**: Filter by order number (partial match)
-    - **item_name**: Filter by item name (partial match)
-    - **item_quantity**: Filter by item quantity (exact match)
-    - **shipping_fee**: Filter by shipping fee (exact match)
-    - **remarks**: Filter by remarks (partial match)
+    - **page**: Page number
+    - **page_size**: Number of items per page
+    - **items_received_status**: Filter by items received status ('all', '0', '1')
     """
     orders = await crud_order.get_orders(
-        skip=skip, limit=limit, order_no=order_no, item_name=item_name,
-        item_quantity=item_quantity, shipping_fee=shipping_fee, remarks=remarks,
-        current_user=current_user
+        current_user=current_user, params=params
     )
     total_count = await crud_order.get_orders_count(
-        order_no=order_no, item_name=item_name,
-        item_quantity=item_quantity, shipping_fee=shipping_fee, remarks=remarks,
-        current_user=current_user
+        current_user=current_user, params=params
     )
     # Convert list of model objects to list of schema objects
     orders_schema = [Order.from_orm(order_model) for order_model in orders]
-    return OrderList(data=orders_schema, total=total_count, page= (skip // limit) + 1, page_size=limit)
+    return OrderList(data=orders_schema, total=total_count, page=params.page, page_size=params.page_size)
 
 
 @router.get("/{order_id}", response_model=Order, summary="Get a specific order by ID", tags=["orders"])

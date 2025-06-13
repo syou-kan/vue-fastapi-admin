@@ -85,6 +85,12 @@
     "action": "Action",
     "created_at": "Created At",
     "updated_at": "Updated At",
-    "id": "ID"
+    "id": "ID",
+    "contactSupport": "Contact Support",
+    "contactSupportHint": "If you encounter any problems during use, please scan the QR code below to contact us.",
+    "supportPhone": "Support Phone",
+    "workHours": "Work Hours",
+    "workHoursDetail": "Monday to Friday 9:00 - 18:00",
+    "close": "Close"
   }
 }
