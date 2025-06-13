@@ -54,9 +54,16 @@
         "tracking_number_required": "物流号不能为空",
         "item_name_required": "物品名称不能为空",
         "username": "请输入用户名",
-        "username_required": "用户名不能为空"
+        "username_required": "用户名不能为空",
+        "item_quantity_required": "物品数量不能为空",
+        "item_quantity_gt_zero": "物品数量必须大于0",
+        "shipping_fee_gte_zero": "运费必须大于等于0",
+        "remarks_max_length": "备注最大长度为200"
       },
-      "itemsReceived": "已收货"
+      "itemsReceived": "已收货",
+      "item_quantity": "物品数量",
+      "shipping_fee": "运费",
+      "remarks": "备注"
     }
   },
   "common": {

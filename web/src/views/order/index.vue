@@ -85,6 +85,10 @@ import { useI18n } from 'vue-i18n'
 
 const { t } = useI18n()
 
+// const shippingFeeTitle = t('views.order.shipping_fee')
+// const remarksTitle = t('views.order.remarks')
+// const itemQuantityTitle = t('views.order.item_quantity')
+
 const crudTableRef = ref(null)
 const queryItems = reactive({
   order_no: '',
@@ -106,7 +110,7 @@ const {
   modalFormRef,
 } = useCRUD({
   name: t('views.order.label_order'),
-  initForm: { order_no: '', tracking_no: '', item_name: '', username: '', items_received: false },
+  initForm: { order_no: '', tracking_no: '', item_name: '', username: '', items_received: false, item_quantity: null, shipping_fee: 0, remarks: '' },
   doCreate: api.createOrder, // 确保 api.createOrder 已在 api/order.js 或 api/index.js 中定义和导出
   doDelete: api.deleteOrder, // 确保 api.deleteOrder 已定义和导出
   doUpdate: api.updateOrder, // 确保 api.updateOrder 已定义和导出
@@ -118,6 +122,16 @@ const orderFormRules = {
   tracking_no: [{ required: true, message: t('views.order.placeholder.tracking_number_required'), trigger: ['input', 'blur'] }],
   item_name: [{ required: true, message: t('views.order.placeholder.item_name_required'), trigger: ['input', 'blur'] }],
   username: [{ required: true, message: t('views.order.placeholder.username_required'), trigger: ['input', 'blur'] }],
+  item_quantity: [
+    { required: true, type: 'number', message: t('views.order.placeholder.item_quantity_required'), trigger: ['input', 'blur'] },
+    { type: 'number', min: 1, message: t('views.order.placeholder.item_quantity_gt_zero'), trigger: ['input', 'blur'] },
+  ],
+  shipping_fee: [
+    { type: 'number', min: 0, message: t('views.order.placeholder.shipping_fee_gte_zero'), trigger: ['input', 'blur'] },
+  ],
+  remarks: [
+    { type: 'string', maxlength: 200, message: t('views.order.placeholder.remarks_max_length'), trigger: ['input', 'blur'] },
+  ],
 }
 
 const columns = computed(() => [
@@ -160,6 +174,24 @@ const columns = computed(() => [
     render(row) {
       return row.items_received ? t('common.text.yes') : t('common.text.no')
     },
+  },
+  {
+    title: '物品数量',
+    key: 'item_quantity',
+    width: 120,
+    ellipsis: { tooltip: true },
+  },
+  {
+    title: '运费',
+    key: 'shipping_fee',
+    width: 120,
+    ellipsis: { tooltip: true },
+  },
+  {
+    title: '备注',
+    key: 'remarks',
+    width: 200,
+    ellipsis: { tooltip: true },
   },
   {
     title: t('common.created_at'),
@@ -220,10 +252,17 @@ t('views.order.placeholder.tracking_number_required')
 t('views.order.placeholder.item_name_required')
 t('views.order.placeholder.username')
 t('views.order.placeholder.username_required')
+t('views.order.placeholder.item_quantity_required')
+t('views.order.placeholder.item_quantity_gt_zero')
+t('views.order.placeholder.shipping_fee_gte_zero')
+t('views.order.placeholder.remarks_max_length')
 t('views.order.username')
 t('views.order.itemsReceived')
 t('common.text.yes') // 需要在国际化文件中添加 common.text.yes 和 common.text.no
 t('common.text.no')
+// t('views.order.item_quantity') // Column title is now hardcoded
+// t('views.order.shipping_fee') // Column title is now hardcoded
+// t('views.order.remarks') // Column title is now hardcoded
 t('common.edit')
 t('common.delete')
 t('common.created_at')
