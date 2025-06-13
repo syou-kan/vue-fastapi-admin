@@ -57,6 +57,12 @@ class Order(OrderInDBBase):
     pass
 
 
+class OrderQuerySchema(BaseModel):
+    page: int = Field(1, ge=1, description="Page number")
+    page_size: int = Field(20, ge=1, le=100, description="Page size")
+    items_received_status: Optional[str] = Field(None, description="Items received status (all, 0, 1)")
+
+
 class OrderList(BasePagination[Order]): # Use the generic BasePagination
     # The 'data' field is now inherited from BasePagination
     pass

@@ -85,6 +85,12 @@
     "action": "操作",
     "created_at": "创建时间",
     "updated_at": "更新时间",
-    "id": "ID"
+    "id": "ID",
+    "contactSupport": "联系客服",
+    "contactSupportHint": "如果您在使用过程中遇到任何问题，请扫描下方二维码联系我们。",
+    "supportPhone": "客服电话",
+    "workHours": "工作时间",
+    "workHoursDetail": "周一至周五 9:00 - 18:00",
+    "close": "关闭"
   }
 }

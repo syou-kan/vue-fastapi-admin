@@ -1,4 +1,5 @@
 import { defineConfig, presetAttributify, presetUno } from 'unocss'
+import presetIcons from '@unocss/preset-icons'
 
 export default defineConfig({
   exclude: [
@@ -13,7 +14,16 @@ export default defineConfig({
     'public',
     './stats.html',
   ],
-  presets: [presetUno(), presetAttributify()],
+  presets: [
+    presetUno(),
+    presetAttributify(),
+    presetIcons({
+      scale: 1.2,
+      collections: {
+        'ant-design': () => import('@iconify-json/ant-design/icons.json').then(i => i.default),
+      }
+    })
+  ],
   shortcuts: [
     ['wh-full', 'w-full h-full'],
     ['f-c-c', 'flex justify-center items-center'],
