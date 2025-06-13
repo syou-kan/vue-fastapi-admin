@@ -46,32 +46,39 @@
             :placeholder="t('views.order.placeholder.username')"
             clearable
           />
-        </QueryBarItem>
-      </template>
-    </CrudTable>
+       </QueryBarItem>
+       <QueryBarItem :label="t('views.order.items_received_status')" :content-style="{ width: '200px' }">
+         <NSelect
+           v-model:value="queryItems.items_received_status"
+           :options="statusOptions"
+           clearable
+         />
+       </QueryBarItem>
+     </template>
+   </CrudTable>
 
-    <CrudModal
-      v-model:visible="modalVisible"
-      :title="modalTitle"
-      :loading="modalLoading"
-      @save="handleSave"
-    >
-      <NForm
-        ref="modalFormRef"
-        label-placement="left"
-        label-align="left"
-        :label-width="80"
-        :model="modalForm"
-        :rules="orderFormRules"
-      >
-        <OrderForm :form="modalForm" />
-      </NForm>
-    </CrudModal>
-  </CommonPage>
+   <CrudModal
+     v-model:visible="modalVisible"
+     :title="modalTitle"
+     :loading="modalLoading"
+     @save="handleSave"
+   >
+     <NForm
+       ref="modalFormRef"
+       label-placement="left"
+       label-align="left"
+       :label-width="80"
+       :model="modalForm"
+       :rules="orderFormRules"
+     >
+       <OrderForm :form="modalForm" />
+     </NForm>
+   </CrudModal>
+ </CommonPage>
 </template>
 
 <script setup>
-import { NButton, NInput, NForm, NFormItem } from 'naive-ui'
+import { NButton, NInput, NForm, NSelect } from 'naive-ui'
 import TheIcon from '@/components/icon/TheIcon.vue'
 import CommonPage from '@/components/page/CommonPage.vue'
 import CrudTable from '@/components/table/CrudTable.vue'
@@ -91,14 +98,21 @@ const { t } = useI18n()
 
 const crudTableRef = ref(null)
 const queryItems = reactive({
-  order_no: '',
-  tracking_no: '',
-  item_name: '',
-  username: '',
+ order_no: '',
+ tracking_no: '',
+ item_name: '',
+ username: '',
+ items_received_status: 'all',
 })
 
+const statusOptions = computed(() => [
+ { label: t('views.order.items_received_status_all'), value: 'all' },
+ { label: t('views.order.items_received_status_received'), value: '1' },
+ { label: t('views.order.items_received_status_not_received'), value: '0' },
+])
+
 const {
-  modalVisible,
+ modalVisible,
   modalAction,
   modalTitle,
   modalLoading,
