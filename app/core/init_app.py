@@ -164,6 +164,18 @@ async def init_menus():
             ),
         ]
         await Menu.bulk_create(children_menu)
+        await Menu.create(
+            menu_type=MenuType.MENU,
+            name="订单管理",
+            path="/order",
+            order=5,
+            parent_id=0,
+            icon="mdi:cart",
+            is_hidden=False,
+            component="@/views/order/index.vue",
+            keepalive=False,
+            redirect="/order/list",
+        )
 
 
 async def init_apis():

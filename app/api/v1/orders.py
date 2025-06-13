@@ -9,7 +9,7 @@ from app.core.dependency import DependAuth # Added import
 
 router = APIRouter()
 
-@router.post("/", response_model=Order, summary="Create a new order")
+@router.post("/", response_model=Order, summary="Create a new order", tags=["orders"])
 async def create_order_endpoint(
     order_in: OrderCreate,
     # current_user: User = Depends(check_permission) # Example permission, adapt as needed
@@ -23,7 +23,7 @@ async def create_order_endpoint(
     return await crud_order.create_order(order=order_in)
 
 
-@router.get("/", response_model=OrderList, summary="Get a list of orders")
+@router.get("/", response_model=OrderList, summary="查看订单", tags=["orders"])
 async def get_orders_endpoint(
     current_user: Annotated[User, DependAuth], # Modified
     skip: int = 0,
@@ -49,7 +49,7 @@ async def get_orders_endpoint(
     return OrderList(data=orders_schema, total=total_count, page= (skip // limit) + 1, page_size=limit)
 
 
-@router.get("/{order_id}", response_model=Order, summary="Get a specific order by ID")
+@router.get("/{order_id}", response_model=Order, summary="Get a specific order by ID", tags=["orders"])
 async def get_order_endpoint(
     order_id: int,
     # current_user: User = Depends(check_permission) # Example permission, adapt as needed
@@ -63,7 +63,7 @@ async def get_order_endpoint(
     return db_order
 
 
-@router.put("/{order_id}", response_model=Order, summary="Update an existing order")
+@router.put("/{order_id}", response_model=Order, summary="Update an existing order", tags=["orders"])
 async def update_order_endpoint(
     order_id: int,
     order_in: OrderUpdate,
@@ -78,7 +78,7 @@ async def update_order_endpoint(
     return updated_order
 
 
-@router.delete("/{order_id}", summary="Delete an order")
+@router.delete("/{order_id}", summary="Delete an order", tags=["orders"])
 async def delete_order_endpoint(
     order_id: int,
     # current_user: User = Depends(check_permission) # Example permission, adapt as needed
