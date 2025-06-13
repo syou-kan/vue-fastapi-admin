@@ -54,9 +54,16 @@
         "tracking_number_required": "Tracking number cannot be empty",
         "item_name_required": "Item name cannot be empty",
         "username": "Please enter username",
-        "username_required": "Username cannot be empty"
+        "username_required": "Username cannot be empty",
+        "item_quantity_required": "Item quantity cannot be empty",
+        "item_quantity_gt_zero": "Item quantity must be greater than 0",
+        "shipping_fee_gte_zero": "Shipping fee must be greater than or equal to 0",
+        "remarks_max_length": "Remarks maximum length is 200"
       },
-      "itemsReceived": "Items Received"
+      "itemsReceived": "Items Received",
+      "item_quantity": "Item Quantity",
+      "shipping_fee": "Shipping Fee",
+      "remarks": "Remarks"
     }
   },
   "common": {

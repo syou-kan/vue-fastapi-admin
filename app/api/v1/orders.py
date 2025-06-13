@@ -19,6 +19,9 @@ async def create_order_endpoint(
     - **order_no**: Unique order number (required)
     - **tracking_no**: Tracking number (optional)
     - **item_name**: Name of the item (required)
+    - **item_quantity**: Quantity of the item (required, positive integer)
+    - **shipping_fee**: Shipping fee (optional, non-negative float, default 0)
+    - **remarks**: Remarks for the order (optional, max 200 chars)
     """
     return await crud_order.create_order(order=order_in)
 
@@ -29,7 +32,10 @@ async def get_orders_endpoint(
     skip: int = 0,
     limit: int = 10,
     order_no: Optional[str] = None,
-    item_name: Optional[str] = None
+    item_name: Optional[str] = None,
+    item_quantity: Optional[int] = None,
+    shipping_fee: Optional[float] = None,
+    remarks: Optional[str] = None,
 ):
     """
     Retrieve a list of orders. Supports pagination and filtering.
@@ -37,13 +43,20 @@ async def get_orders_endpoint(
     - **limit**: Maximum number of records to return
     - **order_no**: Filter by order number (partial match)
     - **item_name**: Filter by item name (partial match)
+    - **item_quantity**: Filter by item quantity (exact match)
+    - **shipping_fee**: Filter by shipping fee (exact match)
+    - **remarks**: Filter by remarks (partial match)
     """
     orders = await crud_order.get_orders(
-        skip=skip, limit=limit, order_no=order_no, item_name=item_name, current_user=current_user # Modified
+        skip=skip, limit=limit, order_no=order_no, item_name=item_name,
+        item_quantity=item_quantity, shipping_fee=shipping_fee, remarks=remarks,
+        current_user=current_user
     )
-    # Assuming OrderList expects a 'data' field and total count for pagination
-    # This might need adjustment based on how BasePagination is defined and how Tortoise handles counts
-    total_count = await crud_order.get_orders_count(order_no=order_no, item_name=item_name, current_user=current_user) # Modified
+    total_count = await crud_order.get_orders_count(
+        order_no=order_no, item_name=item_name,
+        item_quantity=item_quantity, shipping_fee=shipping_fee, remarks=remarks,
+        current_user=current_user
+    )
     # Convert list of model objects to list of schema objects
     orders_schema = [Order.from_orm(order_model) for order_model in orders]
     return OrderList(data=orders_schema, total=total_count, page= (skip // limit) + 1, page_size=limit)
@@ -71,6 +84,14 @@ async def update_order_endpoint(
 ):
     """
     Update an existing order. Only provided fields will be updated.
+    Fields that can be updated:
+    - **order_no**
+    - **tracking_no**
+    - **item_name**
+    - **item_quantity**
+    - **shipping_fee**
+    - **remarks**
+    - **items_received**
     """
     updated_order = await crud_order.update_order(order_id=order_id, order_update=order_in)
     if updated_order is None:

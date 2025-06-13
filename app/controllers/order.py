@@ -57,8 +57,16 @@ async def get_orders(
     limit: int = 100,
     order_no: Optional[str] = None,
     item_name: Optional[str] = None,
+    item_quantity: Optional[int] = None,
+    shipping_fee: Optional[float] = None,
+    remarks: Optional[str] = None,
 ) -> List[Order]:
-    logger.info(f"接收到订单查询请求 - user: {current_user.username if current_user else 'None'}, skip: {skip}, limit: {limit}, order_no: {order_no}, item_name: {item_name}")
+    log_params = (
+        f"user: {current_user.username if current_user else 'None'}, skip: {skip}, limit: {limit}, "
+        f"order_no: {order_no}, item_name: {item_name}, item_quantity: {item_quantity}, "
+        f"shipping_fee: {shipping_fee}, remarks: {remarks}"
+    )
+    logger.info(f"接收到订单查询请求 - {log_params}")
     
     query = Order.all()
     filters = []
@@ -73,7 +81,16 @@ async def get_orders(
     if item_name:
         query = query.filter(item_name__icontains=item_name)
         filters.append(f"item_name__icontains={item_name}")
-    
+    if item_quantity is not None:
+        query = query.filter(item_quantity=item_quantity)
+        filters.append(f"item_quantity={item_quantity}")
+    if shipping_fee is not None:
+        query = query.filter(shipping_fee=shipping_fee)
+        filters.append(f"shipping_fee={shipping_fee}")
+    if remarks:
+        query = query.filter(remarks__icontains=remarks)
+        filters.append(f"remarks__icontains={remarks}")
+        
     logger.info(f"构建的查询条件: {', '.join(filters) if filters else '无过滤条件'}")
     
     results = await query.offset(skip).limit(limit)
@@ -85,8 +102,16 @@ async def get_orders_count(
     current_user: User, # Added
     order_no: Optional[str] = None,
     item_name: Optional[str] = None,
+    item_quantity: Optional[int] = None,
+    shipping_fee: Optional[float] = None,
+    remarks: Optional[str] = None,
 ) -> int:
-    logger.info(f"获取订单总数 - user: {current_user.username if current_user else 'None'}, order_no: {order_no}, item_name: {item_name}")
+    log_params = (
+        f"user: {current_user.username if current_user else 'None'}, order_no: {order_no}, "
+        f"item_name: {item_name}, item_quantity: {item_quantity}, "
+        f"shipping_fee: {shipping_fee}, remarks: {remarks}"
+    )
+    logger.info(f"获取订单总数 - {log_params}")
     
     query = Order.all()
     filters = []
@@ -101,7 +126,16 @@ async def get_orders_count(
     if item_name:
         query = query.filter(item_name__icontains=item_name)
         filters.append(f"item_name__icontains={item_name}")
-    
+    if item_quantity is not None:
+        query = query.filter(item_quantity=item_quantity)
+        filters.append(f"item_quantity={item_quantity}")
+    if shipping_fee is not None:
+        query = query.filter(shipping_fee=shipping_fee)
+        filters.append(f"shipping_fee={shipping_fee}")
+    if remarks:
+        query = query.filter(remarks__icontains=remarks)
+        filters.append(f"remarks__icontains={remarks}")
+        
     logger.info(f"总数查询条件: {', '.join(filters) if filters else '无过滤条件'}")
     
     count = await query.count()

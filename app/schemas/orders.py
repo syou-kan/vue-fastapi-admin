@@ -21,6 +21,9 @@ class OrderBase(CustomBaseModel):
     order_no: str = Field(..., description="Order number")
     tracking_no: Optional[str] = Field(None, description="Tracking number")
     item_name: str = Field(..., description="Item name")
+    item_quantity: int = Field(..., gt=0, description="物品数量")
+    shipping_fee: float = Field(0, ge=0, description="金额（运费）")
+    remarks: Optional[str] = Field(None, max_length=200, description="备注")
     username: str = Field(..., description="Username")
     items_received: bool = Field(False, description="Whether the items have been received")
 
@@ -33,6 +36,9 @@ class OrderUpdate(CustomBaseModel):
     order_no: Optional[str] = Field(None, description="Order number")
     tracking_no: Optional[str] = Field(None, description="Tracking number")
     item_name: Optional[str] = Field(None, description="Item name")
+    item_quantity: Optional[int] = Field(None, gt=0, description="物品数量")
+    shipping_fee: Optional[float] = Field(None, ge=0, description="金额（运费）")
+    remarks: Optional[str] = Field(None, max_length=200, description="备注")
     username: Optional[str] = Field(None, description="Username")
     items_received: bool | None = Field(None, description="Whether the items have been received")
 
