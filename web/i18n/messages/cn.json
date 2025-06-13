@@ -60,10 +60,14 @@
         "shipping_fee_gte_zero": "运费必须大于等于0",
         "remarks_max_length": "备注最大长度为200"
       },
-      "itemsReceived": "已收货",
+      "itemsReceived": "已收",
       "item_quantity": "物品数量",
       "shipping_fee": "运费",
-      "remarks": "备注"
+      "remarks": "备注",
+      "items_received_status": "收货状态",
+      "items_received_status_all": "全部",
+      "items_received_status_received": "已收",
+      "items_received_status_not_received": "未收"
     }
   },
   "common": {
