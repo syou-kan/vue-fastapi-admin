@@ -6,7 +6,7 @@ from fastapi.exceptions import HTTPException
 from app.core.crud import CRUDBase
 from app.models.admin import User
 from app.schemas.login import CredentialsSchema
-from app.schemas.users import UserCreate, UserUpdate
+from app.schemas.users import UserCreate, UserUpdate,RegisterUser
 from app.utils.password import get_password_hash, verify_password
 
 from .role import role_controller
@@ -55,6 +55,28 @@ class UserController(CRUDBase[User, UserCreate, UserUpdate]):
             raise HTTPException(status_code=403, detail="不允许重置超级管理员密码")
         user_obj.password = get_password_hash(password="123456")
         await user_obj.save()
+
+    async def register_user(self, obj_in: RegisterUser) -> User:
+        # 检查手机号是否已存在
+        if await self.model.filter(phone=obj_in.phone).exists():
+            raise HTTPException(status_code=400, detail="该手机号已被注册")
+
+        # 检查邮箱是否已存在（如果提供了邮箱）
+        if obj_in.email and await self.model.filter(email=obj_in.email).exists():
+            raise HTTPException(status_code=400, detail="该邮箱已被注册")
+
+        # 创建用户
+        user_data = {
+            "username": obj_in.phone,  # 使用手机号作为用户名
+            "password": get_password_hash(obj_in.password),
+            "phone": obj_in.phone,
+            "real_name": obj_in.real_name,
+            "company_name": obj_in.company_name,
+            "company_code": obj_in.company_code,
+            "email": obj_in.email
+        }
+        user = await self.create(UserCreate(**user_data))
+        return user
 
 
 user_controller = UserController()

@@ -1,4 +1,5 @@
 import logging
+from http.client import HTTPException
 
 from fastapi import APIRouter, Body, Query
 from tortoise.expressions import Q
@@ -7,6 +8,7 @@ from app.controllers.dept import dept_controller
 from app.controllers.user import user_controller
 from app.schemas.base import Fail, Success, SuccessExtra
 from app.schemas.users import *
+from app.schemas.users import RegisterUser
 
 logger = logging.getLogger(__name__)
 
@@ -79,3 +81,13 @@ async def delete_user(
 async def reset_password(user_id: int = Body(..., description="用户ID", embed=True)):
     await user_controller.reset_password(user_id)
     return Success(msg="密码已重置为123456")
+
+@router.post("/register", summary="用户注册")
+async def register_user(
+    user_in: RegisterUser,
+):
+    try:
+        new_user = await user_controller.register_user(user_in)
+        return Success(msg="注册成功")
+    except HTTPException as e:
+        return Fail(code=e.status_code, msg=e.detail)

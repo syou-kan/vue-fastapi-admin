@@ -107,6 +107,28 @@ export const basicRoutes = [
     component: () => import('@/views/error-page/404.vue'),
     isHidden: true,
   },
+    // 注册页面路由
+  {
+    path: '/register',
+    name: 'register',
+    component: () => import('@/views/register/index.vue'),
+    meta: {
+      title: '注册',
+      requiresAuth: false
+    }
+  },
+
+  // 首页路由
+  {
+    path: '/',
+    name: 'dashboard',
+    component: () => import('@/views/dashboard/index.vue'),
+    meta: {
+      title: '首页',
+      requiresAuth: true,
+      icon: 'mdi:home'
+    }
+  },
   {
     name: 'Login',
     path: '/login',

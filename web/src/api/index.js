@@ -42,3 +42,20 @@ export default {
   // auditlog
   getAuditLogList: (params = {}) => request.get('/auditlog/list', { params }),
 }
+// web/src/api/index.js
+// 添加注册接口
+export function register(data) {
+  return request({
+    url: '/v1/users/register',
+    method: 'post',
+    data
+  })
+}
+
+// 添加获取公司信息接口（模拟）
+export function getCompanyInfo() {
+  return request({
+    url: '/company/info',
+    method: 'get'
+  })
+}

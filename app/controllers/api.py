@@ -1,3 +1,4 @@
+# api.py
 from fastapi.routing import APIRoute
 
 from app.core.crud import CRUDBase
@@ -33,7 +34,11 @@ class ApiController(CRUDBase[Api, ApiCreate, ApiUpdate]):
                 method = list(route.methods)[0]
                 path = route.path_format
                 summary = route.summary
-                tags = list(route.tags)[0]
+
+                # 修复：处理没有tags的路由
+                tags_list = list(route.tags)
+                tags = tags_list[0] if tags_list else "未分类"
+
                 api_obj = await Api.filter(method=method, path=path).first()
                 if api_obj:
                     await api_obj.update_from_dict(dict(method=method, path=path, summary=summary, tags=tags)).save()

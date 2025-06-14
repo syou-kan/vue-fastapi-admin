@@ -1,3 +1,4 @@
+# enums.py
 from enum import Enum, StrEnum
 
 
@@ -17,3 +18,10 @@ class MethodType(StrEnum):
     PUT = "PUT"
     DELETE = "DELETE"
     PATCH = "PATCH"
+
+
+# 添加用户类型枚举
+class UserType(StrEnum):
+    ADMIN = "admin"  # 管理员
+    STAFF = "staff"  # 普通用户（后台管理用户）
+    CUSTOMER = "customer"  # 客户账号

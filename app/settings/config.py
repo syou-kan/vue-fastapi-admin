@@ -23,70 +23,28 @@ class Settings(BaseSettings):
     SECRET_KEY: str = "3488a63e1765035d386f05409663f55c83bfae3b3c61a932744b20ad14244dcf"  # openssl rand -hex 32
     JWT_ALGORITHM: str = "HS256"
     JWT_ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 7  # 7 day
+    # 修改 TORTOISE_ORM 配置
     TORTOISE_ORM: dict = {
         "connections": {
-            # SQLite configuration
-            "sqlite": {
-                "engine": "tortoise.backends.sqlite",
-                "credentials": {"file_path": f"{BASE_DIR}/db.sqlite3"},  # Path to SQLite database file
-            },
-            # MySQL/MariaDB configuration
-            # Install with: tortoise-orm[asyncmy]
-            # "mysql": {
-            #     "engine": "tortoise.backends.mysql",
-            #     "credentials": {
-            #         "host": "localhost",  # Database host address
-            #         "port": 3306,  # Database port
-            #         "user": "yourusername",  # Database username
-            #         "password": "yourpassword",  # Database password
-            #         "database": "yourdatabase",  # Database name
-            #     },
-            # },
-            # PostgreSQL configuration
-            # Install with: tortoise-orm[asyncpg]
-            # "postgres": {
-            #     "engine": "tortoise.backends.asyncpg",
-            #     "credentials": {
-            #         "host": "localhost",  # Database host address
-            #         "port": 5432,  # Database port
-            #         "user": "yourusername",  # Database username
-            #         "password": "yourpassword",  # Database password
-            #         "database": "yourdatabase",  # Database name
-            #     },
-            # },
-            # MSSQL/Oracle configuration
-            # Install with: tortoise-orm[asyncodbc]
-            # "oracle": {
-            #     "engine": "tortoise.backends.asyncodbc",
-            #     "credentials": {
-            #         "host": "localhost",  # Database host address
-            #         "port": 1433,  # Database port
-            #         "user": "yourusername",  # Database username
-            #         "password": "yourpassword",  # Database password
-            #         "database": "yourdatabase",  # Database name
-            #     },
-            # },
-            # SQLServer configuration
-            # Install with: tortoise-orm[asyncodbc]
-            # "sqlserver": {
-            #     "engine": "tortoise.backends.asyncodbc",
-            #     "credentials": {
-            #         "host": "localhost",  # Database host address
-            #         "port": 1433,  # Database port
-            #         "user": "yourusername",  # Database username
-            #         "password": "yourpassword",  # Database password
-            #         "database": "yourdatabase",  # Database name
-            #     },
-            # },
+            "default": {  # 连接名称改为 default
+                "engine": "tortoise.backends.mysql",  # 使用 MySQL 引擎
+                "credentials": {
+                    "host": "localhost",  # MySQL 服务器地址
+                    "port": 3306,  # MySQL 端口
+                    "user": "root",  # 数据库用户名
+                    "password": "123456",  # 数据库密码
+                    "database": "test1",  # 数据库名称
+                }
+            }
         },
         "apps": {
             "models": {
                 "models": ["app.models", "aerich.models"],
-                "default_connection": "sqlite",
+                "default_connection": "default",  # 指向新连接
             },
         },
-        "use_tz": False,  # Whether to use timezone-aware datetimes
-        "timezone": "Asia/Shanghai",  # Timezone setting
+        "use_tz": False,
+        "timezone": "Asia/Shanghai",
     }
     DATETIME_FORMAT: str = "%Y-%m-%d %H:%M:%S"
 

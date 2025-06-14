@@ -22,7 +22,8 @@ from app.core.exceptions import (
     ResponseValidationHandle,
 )
 from app.log import logger
-from app.models.admin import Api, Menu, Role
+from app.models.admin import Api, Menu, Role, User
+from app.models.enums import UserType  # 修复导入路径
 from app.schemas.menus import MenuType
 from app.settings.config import settings
 
@@ -70,12 +71,14 @@ async def init_superuser():
         await user_controller.create_user(
             UserCreate(
                 username="admin",
-                email="admin@admin.com",
                 password="123456",
+                email="admin@admin.com",
+                phone="13800000000",  # 添加phone字段
                 is_active=True,
                 is_superuser=True,
-                dept_id=None, # 添加缺少的 dept_id
-                role_ids=[] # UserCreate 可能也需要 role_ids
+                dept_id=None,
+                role_ids=[],
+                user_type=UserType.ADMIN
             )
         )
 
@@ -205,48 +208,47 @@ async def init_db():
 async def init_roles():
     roles = await Role.exists()
     if not roles:
+        # 创建三种角色：管理员、普通用户、客户
         admin_role = await Role.create(
             name="管理员",
-            desc="管理员角色",
+            desc="最高权限角色",
         )
-        user_role = await Role.create(
+        staff_role = await Role.create(
             name="普通用户",
-            desc="普通用户角色",
+            desc="后台管理用户，可管理订单和客户",
+        )
+        customer_role = await Role.create(
+            name="客户",
+            desc="客户账号，只能查看自己的订单",
         )
 
-        # 分配所有API给管理员角色
+        # 获取所有API
         all_apis = await Api.all()
+
+        # 管理员角色：分配所有API
         await admin_role.apis.add(*all_apis)
-        # 分配所有菜单给管理员和普通用户
+
+        # 普通用户角色：分配管理相关的API
+        # 假设管理相关API的标签为"管理模块"
+        management_apis = await Api.filter(tags="管理模块")
+        await staff_role.apis.add(*management_apis)
+
+        # 客户角色：分配客户相关API（只能查看自己的订单）
+        # 假设客户API的标签为"客户模块"
+        customer_apis = await Api.filter(tags="客户模块")
+        await customer_role.apis.add(*customer_apis)
+
+        # 分配菜单权限
         all_menus = await Menu.all()
+
+        # 管理员和普通用户分配所有菜单
         await admin_role.menus.add(*all_menus)
-        await user_role.menus.add(*all_menus)
+        await staff_role.menus.add(*all_menus)
 
-        # 为普通用户分配基本API
-        basic_apis_query = Q(method__in=["GET"]) | Q(tags="基础模块")
-        basic_apis_list = await Api.filter(basic_apis_query) # 直接 await QuerySet
-
-        # 明确添加获取订单列表的API权限给普通用户
-        # 路径确认:
-        # app.api.v1.api_router (prefix="/api") -> v1_router (prefix="/v1") -> orders_router (prefix="/orders")
-        # 完整路径应为 /api/v1/orders/
-        order_list_api_path = "/api/v1/orders/" # 确保路径末尾有斜杠，与 PermissionControl 中 request.url.path 匹配
-        order_list_api_method = "GET"
-        order_list_api = await Api.filter(method=order_list_api_method, path=order_list_api_path).first()
-
-        # 将 QuerySet 转换为 list 进行操作
-        mutable_basic_apis_list = list(basic_apis_list)
-
-        if order_list_api:
-            # 检查是否已存在于列表中，避免重复添加
-            exists = any(api.id == order_list_api.id for api in mutable_basic_apis_list)
-            if not exists:
-                mutable_basic_apis_list.append(order_list_api)
-                logger.info(f"权限初始化：已将API '{order_list_api_method} {order_list_api_path}' 添加到 '普通用户' 角色。")
-        else:
-            logger.warning(f"权限初始化：未找到API '{order_list_api_method} {order_list_api_path}'，无法添加到 '普通用户' 角色。请确保该API已通过 refresh_api 正确注册。")
-        
-        await user_role.apis.add(*mutable_basic_apis_list)
+        # 客户角色不分配后台菜单（只使用前端界面）
+        # 如果需要，可以分配部分菜单
+        # customer_menus = await Menu.filter(...)
+        # await customer_role.menus.add(*customer_menus)
 
 
 async def init_data():
