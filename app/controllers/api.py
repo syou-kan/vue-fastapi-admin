@@ -19,7 +19,8 @@ class ApiController(CRUDBase[Api, ApiCreate, ApiUpdate]):
         for route in app.routes:
             # 只更新有鉴权的API
             if isinstance(route, APIRoute) and len(route.dependencies) > 0:
-                all_api_list.append((list(route.methods)[0], route.path_format))
+                for method in route.methods:
+                    all_api_list.append((method, route.path_format))
         delete_api = []
         for api in await Api.all():
             if (api.method, api.path) not in all_api_list:
@@ -31,20 +32,19 @@ class ApiController(CRUDBase[Api, ApiCreate, ApiUpdate]):
 
         for route in app.routes:
             if isinstance(route, APIRoute) and len(route.dependencies) > 0:
-                method = list(route.methods)[0]
                 path = route.path_format
                 summary = route.summary
-
                 # 修复：处理没有tags的路由
-                tags_list = list(route.tags)
-                tags = tags_list[0] if tags_list else "未分类"
-
-                api_obj = await Api.filter(method=method, path=path).first()
-                if api_obj:
-                    await api_obj.update_from_dict(dict(method=method, path=path, summary=summary, tags=tags)).save()
-                else:
-                    logger.debug(f"API Created {method} {path}")
-                    await Api.create(**dict(method=method, path=path, summary=summary, tags=tags))
+                tags = ",".join(map(str, route.tags)) if route.tags else "未分类"
+                for method in route.methods:
+                    api_obj = await Api.filter(method=method, path=path).first()
+                    if api_obj:
+                        await api_obj.update_from_dict(
+                            dict(method=method, path=path, summary=summary, tags=tags)
+                        ).save()
+                    else:
+                        logger.debug(f"API Created {method} {path}")
+                        await Api.create(method=method, path=path, summary=summary, tags=tags)
 
 
 api_controller = ApiController()

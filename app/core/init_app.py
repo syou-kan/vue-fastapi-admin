@@ -167,6 +167,30 @@ async def init_menus():
             ),
         ]
         await Menu.bulk_create(children_menu)
+        dashboard_parent = await Menu.create(
+            menu_type=MenuType.CATALOG,
+            name="仪表盘",
+            path="/dashboard",
+            order=0,
+            parent_id=0,
+            icon="mdi:monitor-dashboard",
+            is_hidden=False,
+            component="Layout",
+            keepalive=False,
+            redirect="/dashboard/workbench",
+        )
+        await Menu.create(
+            menu_type=MenuType.MENU,
+            name="工作台",
+            path="workbench",
+            order=1,
+            parent_id=dashboard_parent.id,
+            icon="mdi:desktop-mac-dashboard",
+            is_hidden=False,
+            component="views/dashboard/workbench/index",
+            keepalive=False,
+        )
+
         await Menu.create(
             menu_type=MenuType.MENU,
             name="订单管理",

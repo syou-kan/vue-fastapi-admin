@@ -6,10 +6,31 @@ const Layout = () => import('@/layout/index.vue')
 export const basicRoutes = [
   {
     path: '/',
-    redirect: '/system/user', // 默认跳转到首页
+    redirect: '/dashboard/workbench', // 默认跳转到首页
     meta: { order: 0 },
   },
-{
+  {
+    path: '/dashboard',
+    component: Layout,
+    redirect: '/dashboard/workbench',
+    meta: {
+      icon: 'mdi:view-dashboard-outline',
+      order: 0,
+      title: 'Dashboard',
+    },
+    children: [
+      {
+        path: 'workbench',
+        name: 'Workbench',
+        component: () => import('@/views/dashboard/workbench/index.vue'),
+        meta: {
+          title: '工作台',
+          icon: 'mdi:view-dashboard',
+        },
+      },
+    ],
+  },
+  {
     path: '/order',
     component: Layout,
     redirect: '/order/list',
