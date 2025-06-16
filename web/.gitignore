@@ -14,9 +14,12 @@ dist-ssr
 coverage
 *.local
 stats.html
-
+.venv/*
+.roo/*
+logs/*
+open.json
 # Editor directories and files
-memory-bank/
+memory-bank/*
 .vscode/*
 !.vscode/extensions.json
 .idea
@@ -25,3 +28,15 @@ memory-bank/
 *.njsproj
 *.sln
 *.sw?
+
+# Environment variables
+# Ignore all environment files, but keep the example template
+.env
+.env.*
+!.env.example
+
+# Python cache & report files
+__pycache__/
+.pytest_cache
+.mypy_cache
+.coverage

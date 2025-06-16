@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia'
 import { basicRoutes, vueModules } from '@/router/routes'
+import { shallowRef } from 'vue'
 import Layout from '@/layout/index.vue'
 import api from '@/api'
 
@@ -78,7 +79,35 @@ export const usePermissionStore = defineStore('permission', {
   actions: {
     async generateRoutes() {
       const res = await api.getUserMenu() // 调用接口获取后端传来的菜单路由
-      this.accessRoutes = buildRoutes(res.data) // 处理成前端路由格式
+      const backendRoutes = res.data || []
+      const dynamicRoutes = buildRoutes(backendRoutes)
+      this.accessRoutes = [
+        {
+          name: 'Dashboard',
+          path: '/dashboard',
+          component: shallowRef(Layout),
+          redirect: '/dashboard',
+          meta: {
+            title: '首页',
+            icon: 'mdi:view-dashboard-outline',
+            order: 0,
+            keepAlive: true,
+          },
+          children: [
+            {
+              name: 'DashboardPage',
+              path: '',
+              component: vueModules['/src/views/dashboard/index.vue'],
+              meta: {
+                title: '首页',
+                icon: 'mdi:view-dashboard-outline',
+                keepAlive: true,
+              },
+            },
+          ],
+        },
+        ...dynamicRoutes,
+      ]
       return this.accessRoutes
     },
     async getAccessApis() {

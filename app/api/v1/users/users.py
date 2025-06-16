@@ -11,6 +11,7 @@ from app.schemas.users import *
 logger = logging.getLogger(__name__)
 
 router = APIRouter()
+public_router = APIRouter()
 
 
 @router.get("/list", summary="查看用户列表")
@@ -54,7 +55,8 @@ async def create_user(
     if user:
         return Fail(code=400, msg="The user with this email already exists in the system.")
     new_user = await user_controller.create_user(obj_in=user_in)
-    await user_controller.update_roles(new_user, user_in.role_ids)
+    if user_in.role_ids:
+        await user_controller.update_roles(new_user, user_in.role_ids)
     return Success(msg="Created Successfully")
 
 
@@ -63,7 +65,8 @@ async def update_user(
     user_in: UserUpdate,
 ):
     user = await user_controller.update(id=user_in.id, obj_in=user_in)
-    await user_controller.update_roles(user, user_in.role_ids)
+    if user_in.role_ids:
+        await user_controller.update_roles(user, user_in.role_ids)
     return Success(msg="Updated Successfully")
 
 
@@ -79,3 +82,10 @@ async def delete_user(
 async def reset_password(user_id: int = Body(..., description="用户ID", embed=True)):
     await user_controller.reset_password(user_id)
     return Success(msg="密码已重置为123456")
+
+@public_router.post("/register", summary="用户注册")
+async def register_user(
+    user_in: UserRegister,
+):
+    await user_controller.register_user(obj_in=user_in)
+    return Success(msg="注册成功")

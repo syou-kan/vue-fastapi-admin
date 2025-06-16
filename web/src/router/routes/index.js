@@ -6,10 +6,10 @@ const Layout = () => import('@/layout/index.vue')
 export const basicRoutes = [
   {
     path: '/',
-    redirect: '/system/user', // 默认跳转到首页
+    redirect: '/dashboard', // 默认跳转到首页
     meta: { order: 0 },
   },
-{
+  {
     path: '/order',
     component: Layout,
     redirect: '/order/list',
@@ -106,6 +106,15 @@ export const basicRoutes = [
     path: '/404',
     component: () => import('@/views/error-page/404.vue'),
     isHidden: true,
+  },
+  {
+    name: 'Register',
+    path: '/register',
+    component: () => import('@/views/register/index.vue'),
+    isHidden: true,
+    meta: {
+      title: '注册页',
+    },
   },
   {
     name: 'Login',

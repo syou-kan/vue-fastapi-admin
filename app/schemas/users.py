@@ -17,9 +17,9 @@ class BaseUser(BaseModel):
 
 
 class UserCreate(BaseModel):
-    email: EmailStr = Field(example="admin@qq.com")
-    username: str = Field(example="admin")
-    password: str = Field(example="123456")
+    email: EmailStr
+    username: str
+    password: str
     is_active: Optional[bool] = True
     is_superuser: Optional[bool] = False
     role_ids: Optional[List[int]] = []
@@ -42,3 +42,14 @@ class UserUpdate(BaseModel):
 class UpdatePassword(BaseModel):
     old_password: str = Field(description="旧密码")
     new_password: str = Field(description="新密码")
+
+class UserRegister(BaseModel):
+    email: EmailStr = Field(..., description="邮箱")
+    username: str = Field(..., description="用户名")
+    password: str = Field(..., description="密码")
+    phone_number: str = Field(..., description="手机号码")
+    company_name: str = Field(..., description="公司名称")
+    credit_code: str = Field(..., description="统一社会信用代码")
+
+    def create_dict(self):
+        return self.model_dump()

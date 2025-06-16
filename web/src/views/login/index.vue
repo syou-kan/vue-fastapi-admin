@@ -47,6 +47,12 @@
             {{ $t('views.login.text_login') }}
           </n-button>
         </div>
+
+       <div mt-20 text-center>
+         <router-link to="/register" class="text-blue-500 hover:underline">
+           没有账户？立即注册
+         </router-link>
+       </div>
       </div>
     </div>
   </AppPage>

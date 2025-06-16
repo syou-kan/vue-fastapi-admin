@@ -1,3 +1,4 @@
+import logging
 from datetime import datetime
 from typing import List, Optional
 
@@ -6,7 +7,7 @@ from fastapi.exceptions import HTTPException
 from app.core.crud import CRUDBase
 from app.models.admin import User
 from app.schemas.login import CredentialsSchema
-from app.schemas.users import UserCreate, UserUpdate
+from app.schemas.users import UserCreate, UserRegister, UserUpdate
 from app.utils.password import get_password_hash, verify_password
 
 from .role import role_controller
@@ -22,10 +23,35 @@ class UserController(CRUDBase[User, UserCreate, UserUpdate]):
     async def get_by_username(self, username: str) -> Optional[User]:
         return await self.model.filter(username=username).first()
 
+    async def get_by_credit_code(self, credit_code: str) -> Optional[User]:
+        return await self.model.filter(credit_code=credit_code).first()
+
     async def create_user(self, obj_in: UserCreate) -> User:
         obj_in.password = get_password_hash(password=obj_in.password)
         obj = await self.create(obj_in)
         return obj
+
+    async def register_user(self, obj_in: UserRegister) -> User:
+        if await self.get_by_username(obj_in.username):
+            raise HTTPException(status_code=400, detail="用户名已存在")
+        if await self.get_by_email(obj_in.email):
+            raise HTTPException(status_code=400, detail="邮箱已存在")
+        if await self.get_by_credit_code(obj_in.credit_code):
+            raise HTTPException(status_code=400, detail="统一社会信用代码已存在")
+
+        obj_in_data = obj_in.model_dump()
+        obj_in_data["password"] = get_password_hash(password=obj_in.password)
+        user = await self.model.create(**obj_in_data)
+
+        # 为新用户分配默认角色
+        default_role = await role_controller.get_by_name("普通用户")
+        if default_role:
+            await user.roles.add(default_role)
+        else:
+            # 如果默认角色不存在，可以记录一个警告或采取其他措施
+            logging.warning("Default role '普通用户' not found, user created without a role.")
+
+        return user
 
     async def update_last_login(self, id: int) -> None:
         user = await self.model.get(id=id)
