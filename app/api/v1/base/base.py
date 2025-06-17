@@ -41,6 +41,8 @@ async def login_access_token(credentials: CredentialsSchema):
 async def get_userinfo():
     user_id = CTX_USER_ID.get()
     user_obj = await user_controller.get(id=user_id)
+    if not user_obj:
+        return Fail(msg="User not found")
     data = await user_obj.to_dict(exclude_fields=["password"])
     data["avatar"] = "https://avatars.githubusercontent.com/u/54677442?v=4"
     return Success(data=data)
@@ -50,6 +52,8 @@ async def get_userinfo():
 async def get_user_menu():
     user_id = CTX_USER_ID.get()
     user_obj = await User.filter(id=user_id).first()
+    if not user_obj:
+        return Fail(msg="User not found")
     menus: list[Menu] = []
     if user_obj.is_superuser:
         menus = await Menu.all()
@@ -78,6 +82,8 @@ async def get_user_menu():
 async def get_user_api():
     user_id = CTX_USER_ID.get()
     user_obj = await User.filter(id=user_id).first()
+    if not user_obj:
+        return Fail(msg="User not found")
     if user_obj.is_superuser:
         api_objs: list[Api] = await Api.all()
         apis = [api.method.lower() + api.path for api in api_objs]

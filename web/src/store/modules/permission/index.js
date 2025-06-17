@@ -1,4 +1,5 @@
 import { defineStore } from 'pinia'
+import { useUserStore } from '../user'
 import { basicRoutes, vueModules } from '@/router/routes'
 import { shallowRef } from 'vue'
 import Layout from '@/layout/index.vue'
@@ -70,7 +71,13 @@ export const usePermissionStore = defineStore('permission', {
       return basicRoutes.concat(this.accessRoutes)
     },
     menus() {
-      return this.routes.filter((route) => route.name && !route.isHidden)
+      const userStore = useUserStore()
+      return this.routes.filter((route) => {
+        if (route.name === 'ErrorPage' && !userStore.is_superuser) {
+          return false
+        }
+        return route.name && !route.isHidden
+      })
     },
     apis() {
       return this.accessApis

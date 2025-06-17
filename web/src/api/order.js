@@ -1,6 +1,6 @@
 import { request } from '@/utils/http'
 
-const R_PREFIX = '/dingdan'
+const R_PREFIX = '/orders'
 
 export default {
   fetchOrders: async (params = {}) => {

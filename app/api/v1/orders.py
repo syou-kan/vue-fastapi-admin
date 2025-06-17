@@ -5,14 +5,14 @@ from fastapi import APIRouter, Depends, HTTPException
 from app.schemas.orders import Order, OrderCreate, OrderUpdate, OrderList, OrderQuerySchema
 from app.controllers.order import order_controller as crud_order
 from app.models.admin import User # Added import
-from app.core.dependency import DependAuth # Added import
+from app.core.dependency import DependAuth, DependPermisson
 
 router = APIRouter(tags=["订单管理"])
 
 @router.post("/", response_model=Order, summary="创建新订单")
 async def create_order_endpoint(
     order_in: OrderCreate,
-    # current_user: User = Depends(check_permission) # Example permission, adapt as needed
+    _: User = DependPermisson,
 ):
     """
     Create a new order with the following information:
@@ -43,7 +43,7 @@ async def get_orders_endpoint(
 @router.get("/{order_id}", response_model=Order, summary="获取指定ID的订单")
 async def get_order_endpoint(
     order_id: int,
-    # current_user: User = Depends(check_permission) # Example permission, adapt as needed
+    _: User = DependPermisson,
 ):
     """
     Get details of a specific order by its ID.
@@ -58,7 +58,7 @@ async def get_order_endpoint(
 async def update_order_endpoint(
     order_id: int,
     order_in: OrderUpdate,
-    # current_user: User = Depends(check_permission) # Example permission, adapt as needed
+    _: User = DependPermisson,
 ):
     """
     Update an existing order. Only provided fields will be updated.
@@ -80,7 +80,7 @@ async def update_order_endpoint(
 @router.delete("/{order_id}", summary="删除订单")
 async def delete_order_endpoint(
     order_id: int,
-    # current_user: User = Depends(check_permission) # Example permission, adapt as needed
+    _: User = DependPermisson,
 ):
     """
     Delete an order by its ID.

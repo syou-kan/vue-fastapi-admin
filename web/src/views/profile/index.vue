@@ -16,7 +16,7 @@ const infoFormRef = ref(null)
 const infoForm = ref({
   avatar: userStore.avatar,
   username: userStore.name,
-  email: userStore.email,
+  phone_number: userStore.phone_number,
 })
 async function updateProfile() {
   isLoading.value = true
@@ -143,11 +143,11 @@ function validatePasswordSame(rule, value) {
                 :placeholder="$t('views.profile.placeholder_username')"
               />
             </NFormItem>
-            <NFormItem :label="$t('views.profile.label_email')" path="email">
+            <NFormItem label="手机号码" path="phone_number">
               <NInput
-                v-model:value="infoForm.email"
+                v-model:value="infoForm.phone_number"
                 type="text"
-                :placeholder="$t('views.profile.placeholder_email')"
+                placeholder="请输入手机号码"
               />
             </NFormItem>
             <NButton type="primary" :loading="isLoading" @click="updateProfile">

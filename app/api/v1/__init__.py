@@ -23,5 +23,5 @@ v1_router.include_router(menus_router, prefix="/menu", dependencies=[DependPermi
 v1_router.include_router(apis_router, prefix="/api", dependencies=[DependPermisson])
 v1_router.include_router(depts_router, prefix="/dept", dependencies=[DependPermisson])
 v1_router.include_router(auditlog_router, prefix="/auditlog", dependencies=[DependPermisson])
-v1_router.include_router(orders_router, prefix="/dingdan", dependencies=[DependPermisson]) # Include orders router
+v1_router.include_router(orders_router, prefix="/orders") # Include orders router
 v1_router.include_router(dashboard_router, prefix="/dashboard", dependencies=[DependPermisson])

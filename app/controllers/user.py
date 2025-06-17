@@ -3,6 +3,7 @@ from datetime import datetime
 from typing import List, Optional
 
 from fastapi.exceptions import HTTPException
+from tortoise.expressions import Q
 
 from app.core.crud import CRUDBase
 from app.models.admin import User
@@ -17,11 +18,11 @@ class UserController(CRUDBase[User, UserCreate, UserUpdate]):
     def __init__(self):
         super().__init__(model=User)
 
-    async def get_by_email(self, email: str) -> Optional[User]:
-        return await self.model.filter(email=email).first()
-
     async def get_by_username(self, username: str) -> Optional[User]:
         return await self.model.filter(username=username).first()
+
+    async def get_by_phone_number(self, phone_number: str) -> Optional[User]:
+        return await self.model.filter(phone_number=phone_number).first()
 
     async def get_by_credit_code(self, credit_code: str) -> Optional[User]:
         return await self.model.filter(credit_code=credit_code).first()
@@ -34,8 +35,6 @@ class UserController(CRUDBase[User, UserCreate, UserUpdate]):
     async def register_user(self, obj_in: UserRegister) -> User:
         if await self.get_by_username(obj_in.username):
             raise HTTPException(status_code=400, detail="用户名已存在")
-        if await self.get_by_email(obj_in.email):
-            raise HTTPException(status_code=400, detail="邮箱已存在")
         if await self.get_by_credit_code(obj_in.credit_code):
             raise HTTPException(status_code=400, detail="统一社会信用代码已存在")
 
@@ -59,9 +58,9 @@ class UserController(CRUDBase[User, UserCreate, UserUpdate]):
         await user.save()
 
     async def authenticate(self, credentials: CredentialsSchema) -> Optional["User"]:
-        user = await self.model.filter(username=credentials.username).first()
+        user = await self.get_by_phone_number(credentials.phone_number)
         if not user:
-            raise HTTPException(status_code=400, detail="无效的用户名")
+            raise HTTPException(status_code=400, detail="无效的手机号码")
         verified = verify_password(credentials.password, user.password)
         if not verified:
             raise HTTPException(status_code=400, detail="密码错误!")

@@ -24,19 +24,21 @@
         </div>
         <div mt-30>
           <n-input
-            v-model:value="registerInfo.email"
-            class="h-50 items-center pl-10 text-16"
-            placeholder="请输入邮箱"
-            :maxlength="50"
-          />
-        </div>
-        <div mt-30>
-          <n-input
             v-model:value="registerInfo.password"
             class="h-50 items-center pl-10 text-16"
             type="password"
             show-password-on="mousedown"
             placeholder="请输入密码"
+            :maxlength="20"
+          />
+        </div>
+        <div mt-30>
+          <n-input
+            v-model:value="registerInfo.confirmPassword"
+            class="h-50 items-center pl-10 text-16"
+            type="password"
+            show-password-on="mousedown"
+            placeholder="请确认密码"
             :maxlength="20"
           />
         </div>
@@ -94,7 +96,7 @@ const { t } = useI18n({ useScope: 'global' })
 const registerInfo = ref({
   username: '',
   password: '',
-  email: '',
+  confirmPassword: '',
   phone_number: '',
   company_name: '',
   credit_code: '',
@@ -102,15 +104,22 @@ const registerInfo = ref({
 
 const loading = ref(false)
 async function handleRegister() {
-  const { username, password, email, phone_number, company_name, credit_code } = registerInfo.value
-  if (!username || !password || !email || !phone_number || !company_name || !credit_code) {
+  const { username, password, confirmPassword, phone_number, company_name, credit_code } =
+    registerInfo.value
+  if (!username || !password || !confirmPassword || !phone_number || !company_name || !credit_code) {
     $message.warning('请填写所有注册信息')
+    return
+  }
+  if (password !== confirmPassword) {
+    $message.warning('两次输入的密码不一致')
     return
   }
   try {
     loading.value = true
     $message.loading('正在注册...')
-    await api.register(registerInfo.value)
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { confirmPassword: _, ...registerPayload } = registerInfo.value
+    await api.register(registerPayload)
     $message.success('注册成功！')
     router.push('/login')
   } catch (e) {

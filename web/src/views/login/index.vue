@@ -15,10 +15,10 @@
         </h5>
         <div mt-30>
           <n-input
-            v-model:value="loginInfo.username"
+            v-model:value="loginInfo.phone_number"
             autofocus
             class="h-50 items-center pl-10 text-16"
-            placeholder="admin"
+            placeholder="请输入手机号"
             :maxlength="20"
           />
         </div>
@@ -70,7 +70,7 @@ const { query } = useRoute()
 const { t } = useI18n({ useScope: 'global' })
 
 const loginInfo = ref({
-  username: '',
+  phone_number: '',
   password: '',
 })
 
@@ -79,22 +79,22 @@ initLoginInfo()
 function initLoginInfo() {
   const localLoginInfo = lStorage.get('loginInfo')
   if (localLoginInfo) {
-    loginInfo.value.username = localLoginInfo.username || ''
+    loginInfo.value.phone_number = localLoginInfo.phone_number || ''
     loginInfo.value.password = localLoginInfo.password || ''
   }
 }
 
 const loading = ref(false)
 async function handleLogin() {
-  const { username, password } = loginInfo.value
-  if (!username || !password) {
-    $message.warning(t('views.login.message_input_username_password'))
+  const { phone_number, password } = loginInfo.value
+  if (!phone_number || !password) {
+    $message.warning('请输入手机号和密码')
     return
   }
   try {
     loading.value = true
     $message.loading(t('views.login.message_login_success'))
-    const res = await api.login({ username, password: password.toString() })
+    const res = await api.login({ phone_number, password: password.toString() })
     $message.success(t('views.login.message_login_success'))
     setToken(res.data.access_token)
     await addDynamicRoutes()

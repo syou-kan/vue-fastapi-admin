@@ -65,19 +65,32 @@ def register_routers(app: FastAPI, prefix: str = "/api"):
 
 
 async def init_superuser():
-    user = await user_controller.model.exists()
-    if not user:
-        await user_controller.create_user(
-            UserCreate(
-                username="admin",
-                email="admin@admin.com",
-                password="123456",
-                is_active=True,
-                is_superuser=True,
-                dept_id=None, # 添加缺少的 dept_id
-                role_ids=[] # UserCreate 可能也需要 role_ids
-            )
+    """
+    初始化超级用户，如果不存在则创建，并确保其拥有'管理员'角色。
+    """
+    admin_user = await user_controller.get_by_username("admin")
+    if not admin_user:
+        admin_user_in = UserCreate(
+            username="admin",
+            password="123456",
+            phone_number="18888888888",
+            is_active=True,
+            is_superuser=True,
+            dept_id=0,
         )
+        admin_user = await user_controller.create_user(admin_user_in)
+        logger.info("超级用户创建成功。")
+
+    # 确保超级用户有关联的'管理员'角色
+    admin_role = await Role.get_or_none(name="管理员")
+    if admin_user and admin_role:
+        # 检查用户是否已有该角色
+        has_admin_role = await admin_user.roles.filter(id=admin_role.id).exists()
+        if not has_admin_role:
+            await admin_user.roles.add(admin_role)
+            logger.info("已为超级用户分配'管理员'角色。")
+    elif not admin_role:
+        logger.warning("初始化警告：'管理员'角色不存在，无法为超级用户分配角色。")
 
 
 async def init_menus():
@@ -179,9 +192,10 @@ async def init_menus():
 
 
 async def init_apis():
-    apis = await api_controller.model.exists()
-    if not apis:
-        await api_controller.refresh_api()
+    """
+    初始化API，刷新API列表确保与代码同步。
+    """
+    await api_controller.refresh_api()
 
 
 async def init_db():
@@ -202,56 +216,70 @@ async def init_db():
     await command.upgrade(run_in_transaction=True)
 
 
+async def init_order_apis():
+    """
+    确保订单管理的API被手动注册到数据库中。
+    这是一个保障性措施，以防 refresh_api 未能正确扫描到它们。
+    """
+    order_api_definitions = [
+        {"method": "POST", "path": "/api/v1/orders/", "summary": "创建新订单", "tags": "订单管理"},
+        {"method": "GET", "path": "/api/v1/orders/", "summary": "查看所有订单", "tags": "订单管理"},
+        {"method": "GET", "path": "/api/v1/orders/{order_id}", "summary": "获取指定ID的订单", "tags": "订单管理"},
+        {"method": "PUT", "path": "/api/v1/orders/{order_id}", "summary": "更新订单", "tags": "订单管理"},
+        {"method": "DELETE", "path": "/api/v1/orders/{order_id}", "summary": "删除订单", "tags": "订单管理"},
+    ]
+
+    for api_def in order_api_definitions:
+        await Api.get_or_create(
+            path=api_def["path"],
+            method=api_def["method"],
+            defaults={"summary": api_def["summary"], "tags": api_def["tags"]}
+        )
+    logger.info("已手动确保订单管理API的注册。")
+
+
 async def init_roles():
-    roles = await Role.exists()
-    if not roles:
-        admin_role = await Role.create(
-            name="管理员",
-            desc="管理员角色",
-        )
-        user_role = await Role.create(
-            name="普通用户",
-            desc="普通用户角色",
-        )
+    """
+    初始化角色。首次运行时创建默认角色和权限。
+    后续运行时，确保管理员角色拥有所有API权限。
+    """
+    # 首次运行时，创建角色、分配菜单和基础API
+    if not await Role.exists():
+        logger.info("首次初始化角色权限...")
+        admin_role = await Role.create(name="管理员", desc="管理员角色")
+        user_role = await Role.create(name="普通用户", desc="普通用户角色")
 
-        # 分配所有API给管理员角色
-        all_apis = await Api.all()
-        await admin_role.apis.add(*all_apis)
-        # 分配所有菜单给管理员和普通用户
+        # 分配菜单
         all_menus = await Menu.all()
-        await admin_role.menus.add(*all_menus)
-        await user_role.menus.add(*all_menus)
+        if all_menus:
+            await admin_role.menus.add(*all_menus)
+            await user_role.menus.add(*all_menus)
+            logger.info("已为默认角色分配菜单。")
 
-        # 为普通用户分配基本API
+        # 为普通用户分配基础API
         basic_apis_query = Q(method__in=["GET"]) | Q(tags="基础模块")
-        basic_apis_list = await Api.filter(basic_apis_query) # 直接 await QuerySet
+        basic_apis = await Api.filter(basic_apis_query)
+        if basic_apis:
+            await user_role.apis.add(*basic_apis)
+            logger.info("已为'普通用户'角色分配基础API权限。")
 
-        # 明确添加获取订单列表的API权限给普通用户
-        # 路径确认:
-        # app.api.v1.api_router (prefix="/api") -> v1_router (prefix="/v1") -> orders_router (prefix="/orders")
-        # 完整路径应为 /api/v1/orders/
-        order_list_api_path = "/api/v1/orders/" # 确保路径末尾有斜杠，与 PermissionControl 中 request.url.path 匹配
-        order_list_api_method = "GET"
-        order_list_api = await Api.filter(method=order_list_api_method, path=order_list_api_path).first()
+    # 每次启动时，都为管理员同步所有API权限
+    admin_role = await Role.get_or_none(name="管理员")
+    if not admin_role:
+        admin_role = await Role.create(name="管理员", desc="管理员角色")
+        logger.info("已创建'管理员'角色。")
 
-        # 将 QuerySet 转换为 list 进行操作
-        mutable_basic_apis_list = list(basic_apis_list)
-
-        if order_list_api:
-            # 检查是否已存在于列表中，避免重复添加
-            exists = any(api.id == order_list_api.id for api in mutable_basic_apis_list)
-            if not exists:
-                mutable_basic_apis_list.append(order_list_api)
-                logger.info(f"权限初始化：已将API '{order_list_api_method} {order_list_api_path}' 添加到 '普通用户' 角色。")
-        else:
-            logger.warning(f"权限初始化：未找到API '{order_list_api_method} {order_list_api_path}'，无法添加到 '普通用户' 角色。请确保该API已通过 refresh_api 正确注册。")
-        
-        await user_role.apis.add(*mutable_basic_apis_list)
+    all_apis = await Api.all()
+    if all_apis:
+        await admin_role.apis.clear()
+        await admin_role.apis.add(*all_apis)
+        logger.info("已将所有API权限强制同步至'管理员'角色。")
 
 
 async def init_data():
     await init_db()
-    await init_superuser()
     await init_menus()
     await init_apis()
+    await init_order_apis()
     await init_roles()
+    await init_superuser()

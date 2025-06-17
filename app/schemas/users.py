@@ -1,12 +1,11 @@
 from datetime import datetime
 from typing import List, Optional
 
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, Field
 
 
 class BaseUser(BaseModel):
     id: int
-    email: Optional[EmailStr] = None
     username: Optional[str] = None
     is_active: Optional[bool] = True
     is_superuser: Optional[bool] = False
@@ -14,12 +13,13 @@ class BaseUser(BaseModel):
     updated_at: Optional[datetime]
     last_login: Optional[datetime]
     roles: Optional[list] = []
+    phone_number: Optional[str] = None
 
 
 class UserCreate(BaseModel):
-    email: EmailStr
     username: str
     password: str
+    phone_number: Optional[str] = None
     is_active: Optional[bool] = True
     is_superuser: Optional[bool] = False
     role_ids: Optional[List[int]] = []
@@ -31,10 +31,10 @@ class UserCreate(BaseModel):
 
 class UserUpdate(BaseModel):
     id: int
-    email: EmailStr
     username: str
     is_active: Optional[bool] = True
     is_superuser: Optional[bool] = False
+    phone_number: Optional[str] = None
     role_ids: Optional[List[int]] = []
     dept_id: Optional[int] = 0
 
@@ -44,7 +44,6 @@ class UpdatePassword(BaseModel):
     new_password: str = Field(description="新密码")
 
 class UserRegister(BaseModel):
-    email: EmailStr = Field(..., description="邮箱")
     username: str = Field(..., description="用户名")
     password: str = Field(..., description="密码")
     phone_number: str = Field(..., description="手机号码")

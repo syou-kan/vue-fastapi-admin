@@ -9,7 +9,6 @@ from .enums import MethodType
 class User(BaseModel, TimestampMixin):
     username = fields.CharField(max_length=20, unique=True, description="用户名称", index=True)
     alias = fields.CharField(max_length=30, null=True, description="姓名", index=True)
-    email = fields.CharField(max_length=255, unique=True, description="邮箱", index=True)
     phone_number = fields.CharField(max_length=20, null=True, description="手机号码", index=True)
     company_name = fields.CharField(max_length=100, null=True, description="公司名称")
     credit_code = fields.CharField(max_length=50, null=True, unique=True, description="统一社会信用代码")

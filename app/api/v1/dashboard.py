@@ -4,7 +4,7 @@ from app.models.admin import User
 from app.schemas.dashboard import DashboardResponse
 from app.controllers.dashboard import dashboard_controller
 
-router = APIRouter()
+router = APIRouter(tags=["仪表盘"])
 
 @router.get(
     "",
