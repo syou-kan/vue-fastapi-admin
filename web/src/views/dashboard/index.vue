@@ -10,12 +10,12 @@
       <n-grid :cols="2" :x-gap="16" :y-gap="16">
         <n-gi>
           <n-card title="用户总数" hoverable>
-            <p class="text-3xl font-bold">{{ dashboardData.data.user_count }}</p>
+            <div ref="userChart" class="h-60"></div>
           </n-card>
         </n-gi>
         <n-gi>
           <n-card title="订单总数" hoverable>
-            <p class="text-3xl font-bold">{{ dashboardData.data.order_count }}</p>
+            <div ref="orderChart" class="h-60"></div>
           </n-card>
         </n-gi>
       </n-grid>
@@ -32,13 +32,16 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, watch } from 'vue'
 import { dashboardApi } from '@/api/dashboard'
 import { NGrid, NGi, NCard, NSpin } from 'naive-ui'
+import * as echarts from 'echarts'
 
 const loading = ref(true)
 const error = ref(null)
 const dashboardData = ref(null)
+const userChart = ref(null)
+const orderChart = ref(null)
 
 onMounted(async () => {
   try {
@@ -52,4 +55,51 @@ onMounted(async () => {
     loading.value = false
   }
 })
+
+watch(dashboardData, (newData) => {
+  if (newData && newData.is_admin) {
+    initCharts()
+  }
+})
+
+function initCharts() {
+  if (userChart.value) {
+    const userChartInstance = echarts.init(userChart.value)
+    userChartInstance.setOption({
+      tooltip: {},
+      xAxis: {
+        data: ['用户'],
+      },
+      yAxis: {},
+      series: [
+        {
+          name: '用户总数',
+          type: 'bar',
+          data: [dashboardData.value.data.user_count],
+        },
+      ],
+    })
+  }
+
+  if (orderChart.value) {
+    const orderChartInstance = echarts.init(orderChart.value)
+    orderChartInstance.setOption({
+      tooltip: {},
+      xAxis: {
+        data: ['订单'],
+      },
+      yAxis: {},
+      series: [
+        {
+          name: '订单总数',
+          type: 'bar',
+          data: [dashboardData.value.data.order_count],
+          itemStyle: {
+            color: '#67C23A',
+          },
+        },
+      ],
+    })
+  }
+}
 </script>
