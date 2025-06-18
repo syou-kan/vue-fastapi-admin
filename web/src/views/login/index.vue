@@ -97,17 +97,44 @@ async function handleLogin() {
     const res = await api.login({ phone_number, password: password.toString() })
     $message.success(t('views.login.message_login_success'))
     setToken(res.data.access_token)
+    
+    // 添加动态路由
     await addDynamicRoutes()
+    
+    // 智能重定向逻辑
+    let redirectPath = '/dashboard' // 默认重定向到仪表盘
+    
     if (query.redirect) {
-      const path = query.redirect
-      console.log('path', { path, query })
-      Reflect.deleteProperty(query, 'redirect')
-      router.push({ path, query })
+      const targetPath = query.redirect
+      console.log('检查重定向路径:', targetPath)
+      
+      // 验证重定向路径是否有效
+      try {
+        const route = router.resolve(targetPath)
+        if (route && route.name && route.name !== 'NotFound') {
+          redirectPath = targetPath
+          console.log('使用重定向路径:', redirectPath)
+        } else {
+          console.warn('重定向路径无效，使用默认路径:', targetPath)
+        }
+      } catch (routeError) {
+        console.warn('路径解析失败，使用默认路径:', routeError)
+      }
+      
+      // 清理查询参数
+      const cleanQuery = { ...query }
+      Reflect.deleteProperty(cleanQuery, 'redirect')
+      
+      // 执行重定向
+      router.push({ path: redirectPath, query: cleanQuery })
     } else {
-      router.push('/')
+      // 没有重定向参数，直接跳转到默认页面
+      router.push(redirectPath)
     }
+    
   } catch (e) {
-    console.error('login error', e.error)
+    console.error('登录失败:', e)
+    $message.error('登录失败，请检查用户名和密码')
   }
   loading.value = false
 }

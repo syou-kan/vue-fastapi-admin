@@ -49,5 +49,82 @@ class PermissionControl:
             raise HTTPException(status_code=403, detail=f"Permission denied method:{method} path:{path}")
 
 
+class DataIsolationControl:
+    """
+    数据隔离控制类，确保普通用户只能访问自己的数据。
+    """
+    
+    @classmethod
+    async def check_user_data_access(cls, request: Request, current_user: User = Depends(AuthControl.is_authed)) -> User:
+        """
+        检查用户数据访问权限，确保普通用户只能访问自己的数据。
+        """
+        # 超级用户可以访问所有数据
+        if current_user.is_superuser:
+            return current_user
+            
+        path = request.url.path
+        method = request.method
+        
+        # 对于用户信息相关的API，确保只能访问自己的数据
+        if "/api/v1/user/" in path:
+            # 检查是否试图访问其他用户的数据
+            query_params = dict(request.query_params)
+            if "user_id" in query_params:
+                requested_user_id = int(query_params["user_id"])
+                if requested_user_id != current_user.id:
+                    raise HTTPException(
+                        status_code=403, 
+                        detail="Access denied: You can only access your own user data"
+                    )
+        
+        return current_user
+    
+    @classmethod
+    async def check_order_data_access(cls, request: Request, current_user: User = Depends(AuthControl.is_authed)) -> User:
+        """
+        检查订单数据访问权限，确保普通用户只能访问自己的订单。
+        """
+        # 超级用户可以访问所有订单
+        if current_user.is_superuser:
+            return current_user
+            
+        # 普通用户只能访问自己的订单，这个检查在控制器层面实现
+        # 这里主要是确保用户已经通过认证
+        return current_user
+
+
+class EnhancedPermissionControl:
+    """
+    增强的权限控制类，结合API权限和数据隔离。
+    """
+    
+    @classmethod
+    async def check_api_and_data_permission(
+        cls, 
+        request: Request, 
+        current_user: User = Depends(AuthControl.is_authed)
+    ) -> User:
+        """
+        检查API权限和数据访问权限。
+        """
+        # 首先检查API权限
+        await PermissionControl.has_permission(request, current_user)
+        
+        # 然后检查数据访问权限
+        path = request.url.path
+        
+        if "/api/v1/user/" in path:
+            return await DataIsolationControl.check_user_data_access(request, current_user)
+        elif "/api/v1/orders/" in path:
+            return await DataIsolationControl.check_order_data_access(request, current_user)
+        
+        return current_user
+
+
+# 依赖项定义
 DependAuth = Depends(AuthControl.is_authed)
 DependPermisson = Depends(PermissionControl.has_permission)
+DependDataIsolation = Depends(DataIsolationControl.check_user_data_access)
+DependOrderDataIsolation = Depends(DataIsolationControl.check_order_data_access)
+DependEnhancedPermission = Depends(EnhancedPermissionControl.check_api_and_data_permission)

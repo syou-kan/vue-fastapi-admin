@@ -35,22 +35,70 @@ export async function addDynamicRoutes() {
     router.addRoute(EMPTY_ROUTE)
     return
   }
+  
   // 有token的情况
   const userStore = useUserStore()
   const permissionStore = usePermissionStore()
-  !userStore.userId && (await userStore.getUserInfo())
+  
   try {
+    // 获取用户信息
+    if (!userStore.userId) {
+      await userStore.getUserInfo()
+    }
+    
+    // 生成动态路由
     const accessRoutes = await permissionStore.generateRoutes()
     await permissionStore.getAccessApis()
-    accessRoutes.forEach((route) => {
-      !router.hasRoute(route.name) && router.addRoute(route)
-    })
+    
+    // 验证路由是否有效
+    if (!accessRoutes || accessRoutes.length === 0) {
+      console.warn('警告：未获取到有效的动态路由，使用默认路由')
+      // 添加默认的仪表盘路由作为回退
+      const defaultRoute = {
+        name: 'Dashboard',
+        path: '/dashboard',
+        component: () => import('@/views/dashboard/index.vue'),
+        meta: { title: '仪表盘', icon: 'mdi:view-dashboard' }
+      }
+      router.addRoute(defaultRoute)
+    } else {
+      // 添加有效的动态路由
+      accessRoutes.forEach((route) => {
+        try {
+          if (route && route.name && !router.hasRoute(route.name)) {
+            router.addRoute(route)
+          }
+        } catch (routeError) {
+          console.error(`添加路由失败: ${route?.name}`, routeError)
+        }
+      })
+    }
+    
+    // 清理空路由并添加404路由
     router.hasRoute(EMPTY_ROUTE.name) && router.removeRoute(EMPTY_ROUTE.name)
     router.addRoute(NOT_FOUND_ROUTE)
+    
   } catch (error) {
-    console.error('error', error)
-    const userStore = useUserStore()
-    await userStore.logout()
+    console.error('动态路由生成失败:', error)
+    
+    // 错误处理：提供基本的回退路由
+    try {
+      const fallbackRoute = {
+        name: 'FallbackDashboard',
+        path: '/dashboard',
+        component: () => import('@/views/dashboard/index.vue'),
+        meta: { title: '仪表盘', icon: 'mdi:view-dashboard' }
+      }
+      router.addRoute(fallbackRoute)
+      router.hasRoute(EMPTY_ROUTE.name) && router.removeRoute(EMPTY_ROUTE.name)
+      router.addRoute(NOT_FOUND_ROUTE)
+      
+      console.info('已添加回退路由，用户可以访问基本功能')
+    } catch (fallbackError) {
+      console.error('回退路由添加失败:', fallbackError)
+      // 最后的错误处理：登出用户
+      await userStore.logout()
+    }
   }
 }
 
