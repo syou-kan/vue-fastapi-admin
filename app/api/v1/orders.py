@@ -21,7 +21,7 @@ async def create_order_endpoint(
     - **tracking_no**: Tracking number (optional)
     - **item_name**: Name of the item (required)
     - **item_quantity**: Quantity of the item (required, positive integer)
-    - **shipping_fee**: Shipping fee (optional, non-negative float, default 0)
+    - **item_amount**: Item amount (optional, non-negative float, default 0)
     - **remarks**: Remarks for the order (optional, max 200 chars)
     
     普通用户创建的订单会自动关联到当前用户。
@@ -91,7 +91,7 @@ async def update_order_endpoint(
     - **tracking_no**
     - **item_name**
     - **item_quantity**
-    - **shipping_fee**
+    - **item_amount**
     - **remarks**
     - **items_received**
     

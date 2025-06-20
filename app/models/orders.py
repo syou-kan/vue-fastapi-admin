@@ -10,7 +10,7 @@ class Order(Model):
     tracking_no = fields.CharField(max_length=255, null=True)
     item_name = fields.CharField(max_length=255, null=False)
     item_quantity = fields.IntField(validators=[MinValueValidator(1)], null=False, description="物品数量")
-    shipping_fee = fields.DecimalField(max_digits=10, decimal_places=2, null=False, default=Decimal("0.00"), description="运费")
+    item_amount = fields.DecimalField(max_digits=10, decimal_places=2, null=False, default=Decimal("0.00"), description="物品金额")
     remarks = fields.CharField(max_length=200, null=True, default=None, description="备注")
     username = fields.CharField(max_length=255, null=False, description="Username")
     items_received = fields.BooleanField(default=False, null=False, description="Whether the items have been received")

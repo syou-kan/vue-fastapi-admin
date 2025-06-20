@@ -124,7 +124,7 @@ const {
   modalFormRef,
 } = useCRUD({
   name: t('views.order.label_order'),
-  initForm: { order_no: '', tracking_no: '', item_name: '', username: '', items_received: false, item_quantity: null, shipping_fee: 0, remarks: '' },
+  initForm: { order_no: '', tracking_no: '', item_name: '', username: '', items_received: false, item_quantity: null, item_amount: 0, remarks: '' },
   doCreate: api.createOrder, // 确保 api.createOrder 已在 api/order.js 或 api/index.js 中定义和导出
   doDelete: api.deleteOrder, // 确保 api.deleteOrder 已定义和导出
   doUpdate: api.updateOrder, // 确保 api.updateOrder 已定义和导出
@@ -140,8 +140,8 @@ const orderFormRules = {
     { required: true, type: 'number', message: t('views.order.placeholder.item_quantity_required'), trigger: ['input', 'blur'] },
     { type: 'number', min: 1, message: t('views.order.placeholder.item_quantity_gt_zero'), trigger: ['input', 'blur'] },
   ],
-  shipping_fee: [
-    { type: 'number', min: 0, message: t('views.order.placeholder.shipping_fee_gte_zero'), trigger: ['input', 'blur'] },
+  item_amount: [
+    { type: 'number', min: 0, message: t('views.order.placeholder.item_amount_gte_zero'), trigger: ['input', 'blur'] },
   ],
   remarks: [
     { type: 'string', maxlength: 200, message: t('views.order.placeholder.remarks_max_length'), trigger: ['input', 'blur'] },
@@ -196,8 +196,8 @@ const columns = computed(() => [
     ellipsis: { tooltip: true },
   },
   {
-    title: '运费',
-    key: 'shipping_fee',
+    title: '物品金额',
+    key: 'item_amount',
     width: 120,
     ellipsis: { tooltip: true },
   },
@@ -268,7 +268,7 @@ t('views.order.placeholder.username')
 t('views.order.placeholder.username_required')
 t('views.order.placeholder.item_quantity_required')
 t('views.order.placeholder.item_quantity_gt_zero')
-t('views.order.placeholder.shipping_fee_gte_zero')
+t('views.order.placeholder.item_amount_gte_zero')
 t('views.order.placeholder.remarks_max_length')
 t('views.order.username')
 t('views.order.itemsReceived')
