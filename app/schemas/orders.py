@@ -43,6 +43,10 @@ class OrderUpdate(CustomBaseModel):
     items_received: bool | None = Field(None, description="Whether the items have been received")
 
 
+class OrderUpdateByUser(CustomBaseModel):
+    is_received: bool
+
+
 class OrderInDBBase(OrderBase):
     id: int = Field(..., description="Order ID")
     created_at: datetime = Field(..., description="Creation timestamp")
@@ -61,6 +65,7 @@ class OrderQuerySchema(BaseModel):
     page: int = Field(1, ge=1, description="Page number")
     page_size: int = Field(20, ge=1, le=100, description="Page size")
     items_received_status: Optional[str] = Field(None, description="Items received status (all, 0, 1)")
+    search: Optional[str] = Field(None, description="Search keyword for order_no, tracking_no, item_name, or username")
 
 
 class OrderList(BasePagination[Order]): # Use the generic BasePagination

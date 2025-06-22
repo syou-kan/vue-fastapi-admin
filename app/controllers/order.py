@@ -3,6 +3,7 @@ import logging
 
 from fastapi import HTTPException
 from tortoise.exceptions import DoesNotExist, IntegrityError
+from tortoise.expressions import Q
 
 from app.models.orders import Order
 from app.schemas.orders import OrderCreate, OrderUpdate, OrderQuerySchema, OrderList
@@ -31,6 +32,17 @@ class OrderController(CRUDBase[Order, OrderCreate, OrderUpdate]):
             query = query.filter(items_received=int(params.items_received_status))
             filters.append(f"items_received={params.items_received_status}")
 
+        if params.search:
+            search_query = Q(
+                Q(order_no__icontains=params.search),
+                Q(tracking_no__icontains=params.search),
+                Q(item_name__icontains=params.search),
+                Q(username__icontains=params.search),
+                join_type="OR"
+            )
+            query = query.filter(search_query)
+            filters.append(f"search='{params.search}'")
+
         logger.info(f"构建的查询条件: {', '.join(filters) if filters else '无过滤条件'}")
         return query
 
@@ -40,6 +52,7 @@ class OrderController(CRUDBase[Order, OrderCreate, OrderUpdate]):
         if current_user:
             query = self._apply_order_filters(query, current_user, params)
 
+        query = query.order_by('-created_at')
         total = await query.count()
         results = await query.offset((params.page - 1) * params.page_size).limit(params.page_size)
         
@@ -62,7 +75,7 @@ class OrderController(CRUDBase[Order, OrderCreate, OrderUpdate]):
                 try:
                     parts = error_detail.split("not null constraint failed:")
                     if len(parts) > 1:
-                        field_info = parts.strip()
+                        field_info = parts[1].strip()
                         field_parts = field_info.split('.')
                         if field_parts:
                             failed_field = field_parts[-1]

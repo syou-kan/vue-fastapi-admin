@@ -2,7 +2,7 @@ from typing import List, Optional, Annotated
 
 from fastapi import APIRouter, Depends, HTTPException
 
-from app.schemas.orders import Order, OrderCreate, OrderUpdate, OrderList, OrderQuerySchema
+from app.schemas.orders import Order, OrderCreate, OrderUpdate, OrderList, OrderQuerySchema, OrderUpdateByUser
 from app.controllers.order import order_controller as crud_order
 from app.models.admin import User
 from app.core.dependency import DependAuth, DependPermisson, DependOrderDataIsolation, DependEnhancedPermission
@@ -99,32 +99,41 @@ async def update_order_endpoint(
     """
     current_user_id = CTX_USER_ID.get()
     current_user = await User.get(id=current_user_id)
+
+    if not current_user.is_superuser:
+        raise HTTPException(status_code=403, detail="Only administrators can perform this action")
     
     # 首先检查订单是否存在
     db_order = await crud_order.get(id=order_id)
     if db_order is None:
         raise HTTPException(status_code=404, detail="Order not found")
     
-    # 普通用户只能更新自己的订单
-    if not current_user.is_superuser and db_order.username != current_user.username:
-        raise HTTPException(
-            status_code=403, 
-            detail="Access denied: You can only update your own orders"
-        )
-    
-    # 普通用户不能修改订单的用户名
-    if not current_user.is_superuser:
-        update_data = order_in.model_dump(exclude_unset=True)
-        if 'username' in update_data and update_data['username'] != current_user.username:
-            raise HTTPException(
-                status_code=403,
-                detail="Access denied: You cannot change the order owner"
-            )
-    
     updated_order = await crud_order.update_order(order_id=order_id, order_update=order_in)
     if updated_order is None:
         raise HTTPException(status_code=404, detail="Order not found")
     return updated_order
+
+
+@router.patch("/{item_id}/receipt", response_model=Order, summary="用户确认收货")
+async def user_confirm_receipt(
+    item_id: int,
+    order_in: OrderUpdateByUser,
+    current_user: User = DependAuth,
+):
+    """
+    用户确认收货
+    """
+    db_order = await crud_order.get(id=item_id)
+    if not db_order:
+        raise HTTPException(status_code=404, detail="Order not found")
+
+    if db_order.username != current_user.username:
+        raise HTTPException(status_code=403, detail="Permission denied")
+
+    return await crud_order.update_order(
+        order_id=item_id,
+        order_update=OrderUpdate(items_received=order_in.is_received),
+    )
 
 
 @router.delete("/{order_id}", summary="删除订单")

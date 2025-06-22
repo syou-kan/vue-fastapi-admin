@@ -78,7 +78,7 @@
 </template>
 
 <script setup>
-import { NButton, NInput, NForm, NSelect } from 'naive-ui'
+import { NButton, NInput, NForm, NSelect, NTag, NTooltip } from 'naive-ui'
 import TheIcon from '@/components/icon/TheIcon.vue'
 import CommonPage from '@/components/page/CommonPage.vue'
 import CrudTable from '@/components/table/CrudTable.vue'
@@ -155,6 +155,13 @@ const columns = computed(() => [
     key: 'id',
     width: 80,
     ellipsis: { tooltip: true },
+    render: (_, rowIndex) => {
+      const pagination = crudTableRef.value?.pagination
+      if (pagination) {
+        return (pagination.page - 1) * pagination.pageSize + rowIndex + 1
+      }
+      return rowIndex + 1
+    },
   },
   {
     title: t('views.order.order_number'),
@@ -186,7 +193,7 @@ const columns = computed(() => [
     width: 100,
     align: 'center',
     render(row) {
-      return row.items_received ? t('common.text.yes') : t('common.text.no')
+      return h(NTag, { type: row.items_received ? 'success' : 'error' }, { default: () => (row.items_received ? t('common.text.yes') : t('common.text.no')) })
     },
   },
   {
@@ -205,7 +212,23 @@ const columns = computed(() => [
     title: '备注',
     key: 'remarks',
     width: 200,
-    ellipsis: { tooltip: true },
+    render(row) {
+      if (!row.remarks)
+        return ''
+      return h(
+        NTooltip,
+        { placement: 'top', trigger: 'hover' },
+        {
+          trigger: () =>
+            h(
+              'div',
+              { style: 'white-space: nowrap; overflow: hidden; text-overflow: ellipsis;' },
+              row.remarks
+            ),
+          default: () => row.remarks,
+        }
+      )
+    },
   },
   {
     title: t('common.created_at'),

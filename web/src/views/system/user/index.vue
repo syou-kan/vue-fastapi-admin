@@ -349,12 +349,12 @@ const validateAddUser = {
                 @keypress.enter="$table?.handleSearch()"
               />
             </QueryBarItem>
-            <QueryBarItem label="邮箱" :label-width="40">
+            <QueryBarItem label="手机号" :label-width="50">
               <NInput
-                v-model:value="queryItems.email"
+                v-model:value="queryItems.phone"
                 clearable
                 type="text"
-                placeholder="请输入邮箱"
+                placeholder="请输入手机号"
                 @keypress.enter="$table?.handleSearch()"
               />
             </QueryBarItem>
@@ -379,8 +379,11 @@ const validateAddUser = {
             <NFormItem label="用户名称" path="username">
               <NInput v-model:value="modalForm.username" clearable placeholder="请输入用户名称" />
             </NFormItem>
-            <NFormItem label="邮箱" path="email">
-              <NInput v-model:value="modalForm.email" clearable placeholder="请输入邮箱" />
+            <NFormItem label="手机号" path="phone_number">
+              <NInput v-model:value="modalForm.phone_number" clearable placeholder="请输入手机号" />
+            </NFormItem>
+            <NFormItem label="公司名称" path="company_name">
+              <NInput v-model:value="modalForm.company_name" clearable placeholder="请输入公司名称" />
             </NFormItem>
             <NFormItem v-if="modalAction === 'add'" label="密码" path="password">
               <NInput

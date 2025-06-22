@@ -4,13 +4,18 @@ const R_PREFIX = '/orders'
 
 export default {
   fetchOrders: async (params = {}) => {
-    const { page = 1, pageSize, ...restQuery } = params
+    const { page = 1, pageSize, order_no, tracking_no, item_name, username, ...restQuery } = params
 
     // 直接使用前端传入的分页参数，不做转换
+    const search = [order_no, tracking_no, item_name, username].filter(Boolean).join(' ').trim()
+
     const finalParams = {
       page,
       page_size: pageSize || 10,
-      ...restQuery, // 保留所有查询参数
+      ...restQuery,
+    }
+    if (search) {
+      finalParams.search = search
     }
 
     const response = await request.get(`${R_PREFIX}/`, { params: finalParams })
@@ -32,5 +37,8 @@ export default {
   },
   deleteOrder: (id) => {
     return request.delete(`${R_PREFIX}/${id}`)
+  },
+  updateOrderReceipt: (id, data) => {
+    return request.patch(`${R_PREFIX}/${id}/receipt`, data)
   },
 }
