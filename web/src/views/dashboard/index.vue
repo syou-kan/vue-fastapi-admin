@@ -8,7 +8,50 @@
 
       <!-- 管理员视图 -->
       <div v-if="dashboardData && dashboardData.is_admin" class="admin-dashboard">
+        <!-- 信息卡片 -->
+        <n-grid :cols="3" :x-gap="16" :y-gap="16" class="mb-4">
+          <n-gi>
+            <n-card hoverable class="info-card">
+              <div class="info-card-content">
+                <n-icon size="40" color="#409EFF"><PeopleOutline /></n-icon>
+                <div class="info-text">
+                  <p class="info-label">用户总数</p>
+                  <p class="info-value">{{ dashboardData.data.user_count }}</p>
+                </div>
+              </div>
+            </n-card>
+          </n-gi>
+          <n-gi>
+            <n-card hoverable class="info-card">
+              <div class="info-card-content">
+                <n-icon size="40" color="#67C23A"><TodayOutline /></n-icon>
+                <div class="info-text">
+                  <p class="info-label">今日订单</p>
+                  <p class="info-value">{{ dashboardData.data.today_orders }}</p>
+                </div>
+              </div>
+            </n-card>
+          </n-gi>
+          <n-gi>
+            <n-card hoverable class="info-card">
+              <div class="info-card-content">
+                <n-icon size="40" color="#E6A23C"><WalletOutline /></n-icon>
+                <div class="info-text">
+                  <p class="info-label">总销售额</p>
+                  <p class="info-value">¥ {{ dashboardData.data.total_sales.toFixed(2) }}</p>
+                </div>
+              </div>
+            </n-card>
+          </n-gi>
+        </n-grid>
+
+        <!-- 图表区域 -->
         <n-grid :cols="2" :x-gap="16" :y-gap="16">
+          <n-gi :span="2">
+            <n-card title="近七日订单量趋势" hoverable>
+              <div ref="dailyOrderChart" class="h-80"></div>
+            </n-card>
+          </n-gi>
           <n-gi>
             <n-card title="用户总数" hoverable>
               <div ref="userChart" class="h-60"></div>
@@ -193,6 +236,8 @@ import ChatboxEllipsesOutline from '@vicons/ionicons5/ChatboxEllipsesOutline'
 import WalletOutline from '@vicons/ionicons5/WalletOutline'
 import TimeOutline from '@vicons/ionicons5/TimeOutline'
 import CallOutline from '@vicons/ionicons5/CallOutline'
+import TodayOutline from '@vicons/ionicons5/TodayOutline'
+import MailUnreadOutline from '@vicons/ionicons5/MailUnreadOutline'
 
 export default {
   components: {
@@ -204,7 +249,9 @@ export default {
     ChatboxEllipsesOutline,
     WalletOutline,
     TimeOutline,
-    CallOutline
+    CallOutline,
+    TodayOutline,
+    MailUnreadOutline
   },
   setup() {
     const loading = ref(true)
@@ -212,6 +259,7 @@ export default {
     const dashboardData = ref(null)
     const userChart = ref(null)
     const orderChart = ref(null)
+    const dailyOrderChart = ref(null)
     const contactSupportModal = ref(null)
 
     onMounted(async () => {
@@ -247,53 +295,66 @@ export default {
     }
 
     function initCharts() {
+      // 用户总数图表
       if (userChart.value && dashboardData.value?.data?.user_count !== undefined) {
         const userChartInstance = echarts.init(userChart.value)
         userChartInstance.setOption({
-          tooltip: {},
-          xAxis: {
-            data: ['用户'],
-          },
-          yAxis: {},
-          series: [
-            {
-              name: '用户总数',
-              type: 'bar',
-              data: [dashboardData.value.data.user_count],
-            },
-          ],
+          tooltip: { trigger: 'axis' },
+          xAxis: { type: 'category', data: ['总用户'] },
+          yAxis: { type: 'value' },
+          series: [{
+            name: '用户总数',
+            type: 'bar',
+            data: [dashboardData.value.data.user_count],
+            barWidth: '40%',
+          }],
         })
-
-        // 添加窗口大小变化时的重绘
-        window.addEventListener('resize', () => {
-          userChartInstance.resize()
-        })
+        window.addEventListener('resize', () => userChartInstance.resize())
       }
 
+      // 订单总数图表
       if (orderChart.value && dashboardData.value?.data?.order_count !== undefined) {
         const orderChartInstance = echarts.init(orderChart.value)
         orderChartInstance.setOption({
-          tooltip: {},
-          xAxis: {
-            data: ['订单'],
-          },
-          yAxis: {},
-          series: [
-            {
-              name: '订单总数',
-              type: 'bar',
-              data: [dashboardData.value.data.order_count],
-              itemStyle: {
-                color: '#67C23A',
-              },
-            },
-          ],
+          tooltip: { trigger: 'axis' },
+          xAxis: { type: 'category', data: ['总订单'] },
+          yAxis: { type: 'value' },
+          series: [{
+            name: '订单总数',
+            type: 'bar',
+            data: [dashboardData.value.data.order_count],
+            barWidth: '40%',
+            itemStyle: { color: '#67C23A' },
+          }],
         })
+        window.addEventListener('resize', () => orderChartInstance.resize())
+      }
 
-        // 添加窗口大小变化时的重绘
-        window.addEventListener('resize', () => {
-          orderChartInstance.resize()
+      // 近七日订单量趋势图
+      if (dailyOrderChart.value) {
+        const dailyOrderChartInstance = echarts.init(dailyOrderChart.value)
+        dailyOrderChartInstance.setOption({
+          tooltip: { trigger: 'axis' },
+          xAxis: {
+            type: 'category',
+            data: ['周一', '周二', '周三', '周四', '周五', '周六', '周日'],
+          },
+          yAxis: { type: 'value' },
+          series: [{
+            name: '订单量',
+            type: 'line',
+            smooth: true,
+            data: dashboardData.value.data.daily_order_trend,
+            itemStyle: { color: '#3b82f6' },
+          }],
+          grid: {
+            left: '3%',
+            right: '4%',
+            bottom: '3%',
+            containLabel: true
+          }
         })
+        window.addEventListener('resize', () => dailyOrderChartInstance.resize())
       }
     }
 
@@ -303,6 +364,7 @@ export default {
       dashboardData,
       userChart,
       orderChart,
+      dailyOrderChart,
       contactSupportModal,
       handleContactSupport
     }
@@ -323,6 +385,37 @@ export default {
   flex: 1;
   min-height: 0;
   padding: 16px;
+  background-color: #f0f2f5;
+}
+
+.info-card {
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.info-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.info-card-content {
+  display: flex;
+  align-items: center;
+}
+
+.info-text {
+  margin-left: 16px;
+}
+
+.info-label {
+  font-size: 14px;
+  color: #606266;
+}
+
+.info-value {
+  font-size: 24px;
+  font-weight: bold;
+  color: #303133;
 }
 
 .dashboard-container {
