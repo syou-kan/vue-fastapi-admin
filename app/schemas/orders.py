@@ -1,5 +1,6 @@
 from typing import List, Optional, Generic, TypeVar
 
+from app.schemas.users import UserSimpleOut
 from pydantic import BaseModel, Field
 from datetime import datetime
 
@@ -24,7 +25,7 @@ class OrderBase(CustomBaseModel):
     item_quantity: int = Field(..., gt=0, description="物品数量")
     item_amount: float = Field(0, ge=0, description="物品金额")
     remarks: Optional[str] = Field(None, max_length=200, description="备注")
-    username: str = Field(..., description="Username")
+    user_id: int = Field(..., description="用户ID")
     items_received: bool = Field(False, description="Whether the items have been received")
 
 
@@ -39,7 +40,7 @@ class OrderUpdate(CustomBaseModel):
     item_quantity: Optional[int] = Field(None, gt=0, description="物品数量")
     item_amount: Optional[float] = Field(None, ge=0, description="物品金额")
     remarks: Optional[str] = Field(None, max_length=200, description="备注")
-    username: Optional[str] = Field(None, description="Username")
+    user_id: Optional[int] = Field(None, description="用户ID")
     items_received: bool | None = Field(None, description="Whether the items have been received")
 
 
@@ -52,6 +53,7 @@ class OrderInDBBase(OrderBase):
     created_at: datetime = Field(..., description="Creation timestamp")
     updated_at: datetime = Field(..., description="Last update timestamp")
     items_received: bool = Field(..., description="Whether the items have been received")
+    user: UserSimpleOut = Field(..., description="关联用户信息")
 
     class Config:
         from_attributes = True
@@ -65,7 +67,7 @@ class OrderQuerySchema(BaseModel):
     page: int = Field(1, ge=1, description="Page number")
     page_size: int = Field(20, ge=1, le=100, description="Page size")
     items_received_status: Optional[str] = Field(None, description="Items received status (all, 0, 1)")
-    search: Optional[str] = Field(None, description="Search keyword for order_no, tracking_no, item_name, or username")
+    search: Optional[str] = Field(None, description="Search keyword for order_no, tracking_no, or item_name")
 
 
 class OrderList(BasePagination[Order]): # Use the generic BasePagination

@@ -41,4 +41,12 @@ export default {
   updateOrderReceipt: (id, data) => {
     return request.patch(`${R_PREFIX}/${id}/receipt`, data)
   },
+  searchUsersByUsername: async (username) => {
+    return request.get('/user/search_username', {
+      params: {
+        username,
+        limit: 3, // 设置默认返回结果数量
+      },
+    })
+  },
 }

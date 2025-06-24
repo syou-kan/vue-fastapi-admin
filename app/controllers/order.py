@@ -25,19 +25,20 @@ class OrderController(CRUDBase[Order, OrderCreate, OrderUpdate]):
     ):
         filters = []
         if current_user and not current_user.is_superuser:
-            query = query.filter(username=current_user.username)
-            filters.append(f"username={current_user.username}")
+            query = query.filter(user_id=current_user.id) # Changed from username to user_id
+            filters.append(f"user_id={current_user.id}")
 
-        if params.items_received_status in ["0", "1"]:
-            query = query.filter(items_received=int(params.items_received_status))
-            filters.append(f"items_received={params.items_received_status}")
+        if params.items_received_status and params.items_received_status != 'all':
+            if params.items_received_status in ["0", "1"]:
+                query = query.filter(items_received=int(params.items_received_status))
+                filters.append(f"items_received={params.items_received_status}")
 
         if params.search:
             search_query = Q(
                 Q(order_no__icontains=params.search),
                 Q(tracking_no__icontains=params.search),
                 Q(item_name__icontains=params.search),
-                Q(username__icontains=params.search),
+                # Removed username from search as it's now a foreign key
                 join_type="OR"
             )
             query = query.filter(search_query)
@@ -54,7 +55,8 @@ class OrderController(CRUDBase[Order, OrderCreate, OrderUpdate]):
 
         query = query.order_by('-created_at')
         total = await query.count()
-        results = await query.offset((params.page - 1) * params.page_size).limit(params.page_size)
+        # Prefetch user data for displaying in the list
+        results = await query.offset((params.page - 1) * params.page_size).limit(params.page_size).prefetch_related("user")
         
         logger.info(f"查询返回结果数量: {len(results)}")
         return OrderList(page=params.page, page_size=params.page_size, total=total, data=results)
@@ -62,7 +64,20 @@ class OrderController(CRUDBase[Order, OrderCreate, OrderUpdate]):
     async def create_order(self, order: OrderCreate) -> Order:
         logger.info(f"Attempting to create order with data: {order.model_dump()}")
         try:
-            db_order = await self.model.create(**order.model_dump())
+            # OrderCreate schema now has user_id, which will be passed to the model's user_id field.
+            order_data = order.model_dump()
+            # Ensure user_id is present, as it's required by the model's ForeignKeyField
+            if 'user_id' not in order_data or order_data['user_id'] is None:
+                raise HTTPException(status_code=400, detail="user_id is required to create an order.")
+            
+            # Verify the user exists before creating the order
+            try:
+                await User.get(id=order_data['user_id'])
+            except DoesNotExist:
+                raise HTTPException(status_code=400, detail=f"User with id {order_data['user_id']} not found.")
+
+            db_order = await self.model.create(**order_data)
+            await db_order.fetch_related("user") # Fetch user to include in the response
             logger.info(f"Order created successfully: ID {db_order.id}")
             return db_order
         except IntegrityError as e:
@@ -92,13 +107,23 @@ class OrderController(CRUDBase[Order, OrderCreate, OrderUpdate]):
 
     async def update_order(self, order_id: int, order_update: OrderUpdate) -> Optional[Order]:
         try:
-            db_order = await self.get(id=order_id)
+            db_order = await self.get(id=order_id) # This should already fetch related user if schema expects it
             if not db_order:
                  raise HTTPException(status_code=404, detail="Order not found")
+            
             update_data = order_update.model_dump(exclude_unset=True)
+            
+            # If user_id is being updated, verify the new user exists
+            if 'user_id' in update_data and update_data['user_id'] is not None:
+                try:
+                    await User.get(id=update_data['user_id'])
+                except DoesNotExist:
+                    raise HTTPException(status_code=400, detail=f"User with id {update_data['user_id']} not found for update.")
+
             for key, value in update_data.items():
                 setattr(db_order, key, value)
             await db_order.save()
+            await db_order.fetch_related("user") # Fetch user to include in the response
             return db_order
         except DoesNotExist:
             raise HTTPException(status_code=404, detail="Order not found")

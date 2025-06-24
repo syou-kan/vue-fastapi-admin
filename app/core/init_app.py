@@ -1,24 +1,21 @@
 import shutil
 
 from aerich import Command
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
+from fastapi.exceptions import RequestValidationError, ResponseValidationError
 from fastapi.middleware import Middleware
 from fastapi.middleware.cors import CORSMiddleware
+from tortoise.exceptions import DoesNotExist, IntegrityError
 from tortoise.expressions import Q
 
 from app.api import api_router
 from app.controllers.api import api_controller
 from app.controllers.user import UserCreate, user_controller
 from app.core.exceptions import (
-    DoesNotExist,
     DoesNotExistHandle,
-    HTTPException,
     HttpExcHandle,
-    IntegrityError,
     IntegrityHandle,
-    RequestValidationError,
     RequestValidationHandle,
-    ResponseValidationError,
     ResponseValidationHandle,
 )
 from app.log import logger

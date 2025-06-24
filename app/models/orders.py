@@ -12,7 +12,7 @@ class Order(Model):
     item_quantity = fields.IntField(validators=[MinValueValidator(1)], null=False, description="物品数量")
     item_amount = fields.DecimalField(max_digits=10, decimal_places=2, null=False, default=Decimal("0.00"), description="物品金额")
     remarks = fields.CharField(max_length=200, null=True, default=None, description="备注")
-    username = fields.CharField(max_length=255, null=False, description="Username")
+    user = fields.ForeignKeyField("models.User", related_name="orders", description="关联用户", null=False)
     items_received = fields.BooleanField(default=False, null=False, description="Whether the items have been received")
     created_at = fields.DatetimeField(auto_now_add=True, description="Creation timestamp")
     updated_at = fields.DatetimeField(auto_now=True, description="Last update timestamp")

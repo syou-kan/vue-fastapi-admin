@@ -74,12 +74,51 @@ class UserController(CRUDBase[User, UserCreate, UserUpdate]):
             role_obj = await role_controller.get(id=role_id)
             await user.roles.add(role_obj)
 
+    async def search_users_by_id_query(self, query_str: str, limit: int = 10) -> List[User]:
+        """
+        根据用户ID片段或完整ID搜索用户。
+        如果 query_str 可以转换为整数，则尝试精确匹配ID。
+        """
+        users = []
+        try:
+            user_id = int(query_str)
+            # 使用 get_or_none 避免在找不到时抛出 DoesNotExist 异常
+            user = await self.model.get_or_none(id=user_id)
+            if user:
+                users.append(user)
+        except ValueError:
+            # 如果 query_str 不能转换为整数，则不进行搜索，因为需求是按ID搜索
+            # 如果未来需要支持其他字段的模糊搜索，可以在这里扩展
+            # 例如，如果 query_str 不是数字，则搜索用户名或昵称：
+            # users = await self.model.filter(
+            #     Q(username__icontains=query_str) | Q(alias__icontains=query_str)
+            # ).limit(limit)
+            pass
+        
+        # 即使只有一个结果，也返回列表，以便前端统一处理
+        return users
+
     async def reset_password(self, user_id: int):
         user_obj = await self.get(id=user_id)
         if user_obj.is_superuser:
             raise HTTPException(status_code=403, detail="不允许重置超级管理员密码")
         user_obj.password = get_password_hash(password="123456")
         await user_obj.save()
+
+    async def fuzzy_search_by_username(
+        self, username: str, limit: int = 3
+    ) -> List[User]:
+        """
+        根据用户名模糊搜索用户
+        :param username: 用户名查询字符串
+        :param limit: 返回结果最大数量
+        :return: 匹配的用户列表
+        """
+        if not username:
+            return []
+        return await self.model.filter(
+            username__icontains=username
+        ).limit(limit)
 
 
 user_controller = UserController()

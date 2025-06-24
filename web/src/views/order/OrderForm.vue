@@ -21,13 +21,19 @@
     />
   </NFormItem>
   <NFormItem :label="t('views.order.username')" path="username">
-    <NInput
+    <NSelect
       v-model:value="model.username"
-      :placeholder="t('views.order.placeholder.username')"
+      filterable
+      remote
+      clearable
+      :loading="loading"
+      :options="userOptions"
+      :placeholder="t('views.order.placeholder.username_required')"
+      @search="handleUserSearch"
       :disabled="!isAdmin"
     />
   </NFormItem>
-  <NFormItem :label="t('views.order.items_received')" path="is_received">
+  <NFormItem label="是否接收到物品" path="is_received">
     <n-checkbox v-model:checked="model.is_received" />
   </NFormItem>
   <NFormItem label="物品数量" path="item_quantity">
@@ -62,10 +68,11 @@
 </template>
 
 <script setup>
-import { NFormItem, NInput, NCheckbox, NInputNumber } from 'naive-ui'
+import { NFormItem, NAutoComplete, NCheckbox, NInputNumber, NInput } from 'naive-ui'
 import { useI18n } from 'vue-i18n'
 import { ref, watch, computed } from 'vue'
 import { useUserStore } from '@/store'
+import api from '@/api'
 
 const props = defineProps({
   form: {
@@ -87,6 +94,33 @@ watch(
 )
 
 const { t } = useI18n()
+const userOptions = ref([])
+const loading = ref(false)
+
+const handleUserSearch = async (query) => {
+  if (!query.trim()) {
+    userOptions.value = []
+    return
+  }
+  if (loading.value) return
+  loading.value = true
+  try {
+    const response = await api.searchUsersByUsername(query)
+    if (response.data) {
+      userOptions.value = response.data.map((user) => ({
+        label: `${user.username}${user.alias ? ` (${user.alias})` : ''}`,
+        value: user.username,
+      }))
+    } else {
+      userOptions.value = []
+    }
+  } catch (error) {
+    console.error('Failed to search users:', error)
+    userOptions.value = []
+  } finally {
+    loading.value = false
+  }
+}
 
 // Pre-resolve translations
 // const itemQuantityText = t('views.order.item_quantity')

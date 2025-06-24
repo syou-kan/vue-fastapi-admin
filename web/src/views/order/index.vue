@@ -47,12 +47,20 @@
             clearable
           />
        </QueryBarItem>
-       <QueryBarItem :label="t('views.order.items_received_status')" :content-style="{ width: '200px' }">
+       <QueryBarItem :label="t('views.order.items_received_status')" :content-style="{ width: '340px' }">
          <NSelect
            v-model:value="queryItems.items_received_status"
            :options="statusOptions"
-           clearable
-         />
+           :clearable="false"
+           style="width: 100%"
+           :consistent-menu-width="false"
+         >
+           <template #option="{ option }">
+             <div style="white-space: normal; word-break: break-all; min-width: max-content;">
+               {{ option.label }}
+             </div>
+           </template>
+         </NSelect>
        </QueryBarItem>
      </template>
    </CrudTable>
@@ -87,10 +95,13 @@ import QueryBarItem from '@/components/query-bar/QueryBarItem.vue'
 import OrderForm from './OrderForm.vue'
 import { useCRUD } from '@/composables'
 import api from '@/api'
-import { computed, reactive, ref, h } from 'vue'
+import { computed, reactive, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { useUserStore } from '@/store'
 
 const { t } = useI18n()
+const userStore = useUserStore()
+const { isSuperUser } = userStore
 
 // const shippingFeeTitle = t('views.order.shipping_fee')
 // const remarksTitle = t('views.order.remarks')
@@ -110,6 +121,7 @@ const statusOptions = computed(() => [
  { label: t('views.order.items_received_status_received'), value: '1' },
  { label: t('views.order.items_received_status_not_received'), value: '0' },
 ])
+
 
 const {
  modalVisible,
@@ -253,7 +265,7 @@ const columns = computed(() => [
     align: 'center',
     fixed: 'right',
     render(row) {
-      return [
+      const actionButtons = [
         h(
           NButton,
           {
@@ -264,16 +276,23 @@ const columns = computed(() => [
           },
           { default: () => t('common.edit') }
         ),
-        h(
-          NButton,
-          {
-            size: 'small',
-            type: 'error',
-            onClick: () => handleDelete(row.id),
-          },
-          { default: () => t('common.delete') }
-        ),
       ]
+
+      if (isSuperUser) {
+        actionButtons.push(
+          h(
+            NButton,
+            {
+              size: 'small',
+              type: 'error',
+              onClick: () => handleDelete(row.id),
+            },
+            { default: () => t('common.delete') }
+          )
+        )
+      }
+
+      return actionButtons
     },
   },
 ])

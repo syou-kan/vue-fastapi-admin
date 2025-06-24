@@ -5,7 +5,8 @@ from tortoise.expressions import Q
 
 from app.controllers.user import user_controller
 from app.schemas.base import Fail, Success, SuccessExtra
-from app.schemas.users import *
+from app.schemas.users import UserSimpleOut, UserSearchResultList # Added UserSearchResultList and UserSimpleOut
+from app.schemas.users import UserCreate, UserRegister, UserUpdate # Keep other existing imports
 from app.core.dependency import DependAuth, DependPermisson, DependDataIsolation, DependEnhancedPermission
 from app.core.ctx import CTX_USER_ID
 from app.models.admin import User
@@ -127,10 +128,44 @@ async def delete_user(
     return Success(msg="Deleted Successfully")
 
 
+@router.get("/search", response_model=UserSearchResultList, summary="根据ID搜索用户")
+async def search_users_by_id_endpoint(
+    query: str = Query(..., description="用户ID查询字符串"),
+    limit: int = Query(10, ge=1, le=100, description="返回结果的最大数量")
+):
+    """
+    根据用户ID（或ID片段，取决于控制器的实现）搜索用户。
+    返回用户列表，包含用户的 `id`, `username`, 和 `alias`。
+    """
+    # 权限：通常搜索用户是开放的，或者至少对登录用户开放。
+    # 如果需要特定权限，可以在此添加 Depends(DependAuth) 或更严格的权限检查。
+    # current_user_id = CTX_USER_ID.get() # 如果需要基于当前用户进行某些操
+    
+    if not query:
+        return UserSearchResultList(data=[])
+        
+    user_objs = await user_controller.search_users_by_id_query(query_str=query, limit=limit)
+    
+    # 将 User model 对象转换为 UserSimpleOut schema 对象
+    results = [UserSimpleOut.model_validate(user) for user in user_objs]
+    return UserSearchResultList(data=results)
+ 
+ 
 @router.post("/reset_password", summary="重置密码")
 async def reset_password(user_id: int = Body(..., description="用户ID", embed=True)):
     await user_controller.reset_password(user_id)
     return Success(msg="密码已重置为123456")
+
+@router.get("/search_username", response_model=UserSearchResultList, summary="用户名模糊搜索")
+async def fuzzy_search_users(
+    username: str = Query(..., description="用户名查询字符串"),
+    limit: int = Query(3, ge=1, le=10, description="返回结果最大数量")
+):
+    """
+    根据用户名进行模糊搜索
+    """
+    users = await user_controller.fuzzy_search_by_username(username, limit)
+    return UserSearchResultList(data=[UserSimpleOut.model_validate(u) for u in users])
 
 
 @public_router.post("/register", summary="用户注册")
