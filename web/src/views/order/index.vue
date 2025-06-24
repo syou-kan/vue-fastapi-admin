@@ -144,7 +144,6 @@ const {
 })
 
 const orderFormRules = {
-  order_no: [{ required: true, message: t('views.order.placeholder.order_number_required'), trigger: ['input', 'blur'] }],
   tracking_no: [{ required: true, message: t('views.order.placeholder.tracking_number_required'), trigger: ['input', 'blur'] }],
   item_name: [{ required: true, message: t('views.order.placeholder.item_name_required'), trigger: ['input', 'blur'] }],
   username: [{ required: true, message: t('views.order.placeholder.username_required'), trigger: ['input', 'blur'] }],

@@ -1,5 +1,8 @@
 from typing import List, Optional
 import logging
+import asyncio
+from datetime import datetime
+import random
 
 from fastapi import HTTPException
 from tortoise.exceptions import DoesNotExist, IntegrityError
@@ -16,6 +19,7 @@ logger = logging.getLogger(__name__)
 class OrderController(CRUDBase[Order, OrderCreate, OrderUpdate]):
     def __init__(self):
         super().__init__(model=Order)
+        self.lock = asyncio.Lock()
 
     def _apply_order_filters(
         self,
@@ -62,48 +66,49 @@ class OrderController(CRUDBase[Order, OrderCreate, OrderUpdate]):
         return OrderList(page=params.page, page_size=params.page_size, total=total, data=results)
 
     async def create_order(self, order: OrderCreate) -> Order:
-        logger.info(f"Attempting to create order with data: {order.model_dump()}")
-        try:
-            # OrderCreate schema now has user_id, which will be passed to the model's user_id field.
-            order_data = order.model_dump()
-            # Ensure user_id is present, as it's required by the model's ForeignKeyField
-            if 'user_id' not in order_data or order_data['user_id'] is None:
-                raise HTTPException(status_code=400, detail="user_id is required to create an order.")
-            
-            # Verify the user exists before creating the order
+        async with self.lock:
+            logger.info(f"Attempting to create order with data: {order.model_dump()}")
             try:
-                await User.get(id=order_data['user_id'])
-            except DoesNotExist:
-                raise HTTPException(status_code=400, detail=f"User with id {order_data['user_id']} not found.")
-
-            db_order = await self.model.create(**order_data)
-            await db_order.fetch_related("user") # Fetch user to include in the response
-            logger.info(f"Order created successfully: ID {db_order.id}")
-            return db_order
-        except IntegrityError as e:
-            logger.error(f"IntegrityError during order creation: {e}", exc_info=True)
-            error_detail = str(e).lower()
-            if "unique constraint failed: orders.order_no" in error_detail or "order with this order_no already exists" in error_detail:
-                raise HTTPException(status_code=400, detail="Order with this order_no already exists.")
-            elif "not null constraint failed" in error_detail:
-                failed_field = "unknown"
+                order_data = order.model_dump()
+                if 'user_id' not in order_data or order_data['user_id'] is None:
+                    raise HTTPException(status_code=400, detail="user_id is required to create an order.")
+                
                 try:
-                    parts = error_detail.split("not null constraint failed:")
-                    if len(parts) > 1:
-                        field_info = parts[1].strip()
-                        field_parts = field_info.split('.')
-                        if field_parts:
-                            failed_field = field_parts[-1]
-                        else:
-                            failed_field = field_info
-                except Exception:
-                    logger.warning(f"Could not parse field name from error: {error_detail}")
-                raise HTTPException(status_code=400, detail=f"Field '{failed_field}' cannot be null.")
-            else:
-                raise HTTPException(status_code=400, detail=f"Database integrity error: {e}")
-        except Exception as e:
-            logger.error(f"Unexpected error during order creation: {e}", exc_info=True)
-            raise HTTPException(status_code=500, detail="An unexpected error occurred during order creation.")
+                    await User.get(id=order_data['user_id'])
+                except DoesNotExist:
+                    raise HTTPException(status_code=400, detail=f"User with id {order_data['user_id']} not found.")
+
+                # 自动生成订单号
+                order_data['order_no'] = datetime.now().strftime('%Y%m%d%H%M%S') + str(random.randint(1000, 9999))
+
+                db_order = await self.model.create(**order_data)
+                await db_order.fetch_related("user")
+                logger.info(f"Order created successfully: ID {db_order.id}, Order No: {db_order.order_no}")
+                return db_order
+            except IntegrityError as e:
+                logger.error(f"IntegrityError during order creation: {e}", exc_info=True)
+                error_detail = str(e).lower()
+                if "unique constraint failed: orders.order_no" in error_detail:
+                    raise HTTPException(status_code=400, detail="Order with this order_no already exists.")
+                elif "not null constraint failed" in error_detail:
+                    failed_field = "unknown"
+                    try:
+                        parts = error_detail.split("not null constraint failed:")
+                        if len(parts) > 1:
+                            field_info = parts[1].strip()
+                            field_parts = field_info.split('.')
+                            if field_parts:
+                                failed_field = field_parts[-1]
+                            else:
+                                failed_field = field_info
+                    except Exception:
+                        logger.warning(f"Could not parse field name from error: {error_detail}")
+                    raise HTTPException(status_code=400, detail=f"Field '{failed_field}' cannot be null.")
+                else:
+                    raise HTTPException(status_code=400, detail=f"Database integrity error: {e}")
+            except Exception as e:
+                logger.error(f"Unexpected error during order creation: {e}", exc_info=True)
+                raise HTTPException(status_code=500, detail="An unexpected error occurred during order creation.")
 
     async def update_order(self, order_id: int, order_update: OrderUpdate) -> Optional[Order]:
         try:
