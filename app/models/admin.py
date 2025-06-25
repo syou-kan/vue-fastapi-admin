@@ -11,7 +11,6 @@ class User(BaseModel, TimestampMixin):
     alias = fields.CharField(max_length=30, null=True, description="姓名", index=True)
     phone_number = fields.CharField(max_length=20, null=True, description="手机号码", index=True)
     company_name = fields.CharField(max_length=100, null=True, description="公司名称")
-    credit_code = fields.CharField(max_length=50, null=True, unique=True, description="统一社会信用代码")
     password = fields.CharField(max_length=128, null=True, description="密码")
     is_active = fields.BooleanField(default=True, description="是否激活", index=True)
     is_superuser = fields.BooleanField(default=False, description="是否为超级管理员", index=True)

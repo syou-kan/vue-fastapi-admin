@@ -58,14 +58,6 @@
             :maxlength="100"
           />
         </div>
-        <div mt-30>
-          <n-input
-            v-model:value="registerInfo.credit_code"
-            class="h-50 items-center pl-10 text-16"
-            placeholder="请输入统一社会信用代码"
-            :maxlength="50"
-          />
-        </div>
 
         <div mt-20>
           <n-button
@@ -99,14 +91,12 @@ const registerInfo = ref({
   confirmPassword: '',
   phone_number: '',
   company_name: '',
-  credit_code: '',
 })
 
 const loading = ref(false)
 async function handleRegister() {
-  const { username, password, confirmPassword, phone_number, company_name, credit_code } =
-    registerInfo.value
-  if (!username || !password || !confirmPassword || !phone_number || !company_name || !credit_code) {
+  const { username, password, confirmPassword, phone_number, company_name } = registerInfo.value
+  if (!username || !password || !confirmPassword || !phone_number || !company_name) {
     $message.warning('请填写所有注册信息')
     return
   }

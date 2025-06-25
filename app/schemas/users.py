@@ -53,7 +53,6 @@ class UserRegister(BaseModel):
     password: str = Field(..., description="密码")
     phone_number: str = Field(..., description="手机号码")
     company_name: str = Field(..., description="公司名称")
-    credit_code: str = Field(..., description="统一社会信用代码")
     
     def create_dict(self):
         return self.model_dump()

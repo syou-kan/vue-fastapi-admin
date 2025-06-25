@@ -39,10 +39,6 @@ def generate_strong_password(length=12):
                 and any(c in string.punctuation for c in password)):
             return password
 
-def generate_credit_code():
-    """生成一个随机的18位统一社会信用代码。"""
-    return ''.join(random.choices(string.ascii_uppercase + string.digits, k=18))
-
 # --- 主注册循环 ---
 def bulk_register_users():
     """使用伪造数据注册指定数量的用户。"""
@@ -54,8 +50,7 @@ def bulk_register_users():
             "username": fake.user_name(),
             "password": generate_strong_password(),
             "phone_number": fake.phone_number(),
-            "company_name": fake.company(),
-            "credit_code": generate_credit_code()
+            "company_name": fake.company()
         }
 
         try:

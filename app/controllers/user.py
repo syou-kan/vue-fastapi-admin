@@ -24,9 +24,6 @@ class UserController(CRUDBase[User, UserCreate, UserUpdate]):
     async def get_by_phone_number(self, phone_number: str) -> Optional[User]:
         return await self.model.filter(phone_number=phone_number).first()
 
-    async def get_by_credit_code(self, credit_code: str) -> Optional[User]:
-        return await self.model.filter(credit_code=credit_code).first()
-
     async def create_user(self, obj_in: UserCreate) -> User:
         obj_in.password = get_password_hash(password=obj_in.password)
         obj = await self.create(obj_in)
@@ -35,9 +32,6 @@ class UserController(CRUDBase[User, UserCreate, UserUpdate]):
     async def register_user(self, obj_in: UserRegister) -> User:
         if await self.get_by_username(obj_in.username):
             raise HTTPException(status_code=400, detail="用户名已存在")
-        if await self.get_by_credit_code(obj_in.credit_code):
-            raise HTTPException(status_code=400, detail="统一社会信用代码已存在")
-
         obj_in_data = obj_in.model_dump()
         obj_in_data["password"] = get_password_hash(password=obj_in.password)
         user = await self.model.create(**obj_in_data)
