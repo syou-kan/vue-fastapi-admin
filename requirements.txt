@@ -60,3 +60,7 @@ watchfiles==1.0.4
 websockets==14.1
 
 Faker==26.0.0
+
+tortoise-orm[asyncmy]
+
+cryptography

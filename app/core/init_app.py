@@ -1,6 +1,6 @@
 import shutil
 
-from aerich import Command
+from tortoise import Tortoise
 from fastapi import FastAPI, HTTPException
 from fastapi.exceptions import RequestValidationError, ResponseValidationError
 from fastapi.middleware import Middleware
@@ -210,22 +210,13 @@ async def init_apis():
     await api_controller.refresh_api()
 
 
-async def init_db():
-    command = Command(tortoise_config=settings.TORTOISE_ORM)
-    try:
-        await command.init_db(safe=True)
-    except FileExistsError:
-        pass
-
-    await command.init()
-    try:
-        await command.migrate()
-    except AttributeError:
-        logger.warning("unable to retrieve model history from database, model history will be created from scratch")
-        shutil.rmtree("migrations")
-        await command.init_db(safe=True)
-
-    await command.upgrade(run_in_transaction=True)
+async def init_tortoise():
+    """
+    初始化 Tortoise ORM 并创建数据库表。
+    """
+    await Tortoise.init(config=settings.TORTOISE_ORM)
+    # 生成数据库模式，如果表不存在则创建
+    await Tortoise.generate_schemas()
 
 
 async def init_order_apis():
@@ -374,7 +365,7 @@ async def configure_user_role_permissions(user_role: Role):
 
 
 async def init_data():
-    await init_db()
+    await init_tortoise()
     await init_menus()
     await init_apis()
     await init_order_apis()
